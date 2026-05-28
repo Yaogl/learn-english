@@ -1,0 +1,38 @@
+{
+  "grade": 3,
+  "semester": 1,
+  "units": [
+    {
+      "unit": 1,
+      "name": "Hello!",
+      "words": [
+        { "id": "g3s1u1w001", "word": "hello", "meaning": "你好", "difficulty": 1 },
+        { "id": "g3s1u1w002", "word": "morning", "meaning": "早晨", "difficulty": 2 },
+        { "id": "g3s1u1w003", "word": "afternoon", "meaning": "下午", "difficulty": 2 },
+        { "id": "g3s1u1w004", "word": "evening", "meaning": "傍晚", "difficulty": 2 },
+        { "id": "g3s1u1w005", "word": "welcome", "meaning": "欢迎", "difficulty": 2 },
+        { "id": "g3s1u1w006", "word": "friend", "meaning": "朋友", "difficulty": 2 },
+        { "id": "g3s1u1w007", "word": "teacher", "meaning": "老师", "difficulty": 2 },
+        { "id": "g3s1u1w008", "word": "student", "meaning": "学生", "difficulty": 2 },
+        { "id": "g3s1u1w009", "word": "school", "meaning": "学校", "difficulty": 1 },
+        { "id": "g3s1u1w010", "word": "classroom", "meaning": "教室", "difficulty": 3 }
+      ]
+    },
+    {
+      "unit": 2,
+      "name": "My Family",
+      "words": [
+        { "id": "g3s1u2w001", "word": "family", "meaning": "家庭", "difficulty": 2 },
+        { "id": "g3s1u2w002", "word": "father", "meaning": "父亲", "difficulty": 2 },
+        { "id": "g3s1u2w003", "word": "mother", "meaning": "母亲", "difficulty": 2 },
+        { "id": "g3s1u2w004", "word": "brother", "meaning": "兄弟", "difficulty": 2 },
+        { "id": "g3s1u2w005", "word": "sister", "meaning": "姐妹", "difficulty": 2 },
+        { "id": "g3s1u2w006", "word": "grandfather", "meaning": "祖父", "difficulty": 3 },
+        { "id": "g3s1u2w007", "word": "grandmother", "meaning": "祖母", "difficulty": 3 },
+        { "id": "g3s1u2w008", "word": "daughter", "meaning": "女儿", "difficulty": 3 },
+        { "id": "g3s1u2w009", "word": "children", "meaning": "孩子们", "difficulty": 3 },
+        { "id": "g3s1u2w010", "word": "parents", "meaning": "父母", "difficulty": 2 }
+      ]
+    }
+  ]
+}
