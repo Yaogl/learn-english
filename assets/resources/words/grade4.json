@@ -1,0 +1,70 @@
+{
+  "grade": 4,
+  "semester": 1,
+  "units": [
+    {
+      "unit": 1,
+      "name": "My Classroom",
+      "words": [
+        { "id": "g4s1u1w001", "word": "window", "meaning": "窗户", "difficulty": 2 },
+        { "id": "g4s1u1w002", "word": "blackboard", "meaning": "黑板", "difficulty": 3 },
+        { "id": "g4s1u1w003", "word": "dictionary", "meaning": "字典", "difficulty": 3 },
+        { "id": "g4s1u1w004", "word": "exercise", "meaning": "练习", "difficulty": 3 },
+        { "id": "g4s1u1w005", "word": "homework", "meaning": "家庭作业", "difficulty": 2 },
+        { "id": "g4s1u1w006", "word": "library", "meaning": "图书馆", "difficulty": 3 },
+        { "id": "g4s1u1w007", "word": "magazine", "meaning": "杂志", "difficulty": 3 },
+        { "id": "g4s1u1w008", "word": "newspaper", "meaning": "报纸", "difficulty": 3 },
+        { "id": "g4s1u1w009", "word": "playground", "meaning": "操场", "difficulty": 3 },
+        { "id": "g4s1u1w010", "word": "umbrella", "meaning": "雨伞", "difficulty": 3 }
+      ]
+    },
+    {
+      "unit": 2,
+      "name": "My Day",
+      "words": [
+        { "id": "g4s1u2w001", "word": "breakfast", "meaning": "早餐", "difficulty": 3 },
+        { "id": "g4s1u2w002", "word": "schedule", "meaning": "时间表", "difficulty": 3 },
+        { "id": "g4s1u2w003", "word": "midnight", "meaning": "午夜", "difficulty": 3 },
+        { "id": "g4s1u2w004", "word": "weekday", "meaning": "工作日", "difficulty": 2 },
+        { "id": "g4s1u2w005", "word": "weekend", "meaning": "周末", "difficulty": 2 },
+        { "id": "g4s1u2w006", "word": "tomorrow", "meaning": "明天", "difficulty": 3 },
+        { "id": "g4s1u2w007", "word": "yesterday", "meaning": "昨天", "difficulty": 3 },
+        { "id": "g4s1u2w008", "word": "always", "meaning": "总是", "difficulty": 2 },
+        { "id": "g4s1u2w009", "word": "sometimes", "meaning": "有时候", "difficulty": 3 },
+        { "id": "g4s1u2w010", "word": "minute", "meaning": "分钟", "difficulty": 2 }
+      ]
+    },
+    {
+      "unit": 3,
+      "name": "Weather",
+      "words": [
+        { "id": "g4s1u3w001", "word": "weather", "meaning": "天气", "difficulty": 2 },
+        { "id": "g4s1u3w002", "word": "temperature", "meaning": "温度", "difficulty": 3 },
+        { "id": "g4s1u3w003", "word": "cloudy", "meaning": "多云的", "difficulty": 2 },
+        { "id": "g4s1u3w004", "word": "rainbow", "meaning": "彩虹", "difficulty": 2 },
+        { "id": "g4s1u3w005", "word": "snowman", "meaning": "雪人", "difficulty": 2 },
+        { "id": "g4s1u3w006", "word": "thunder", "meaning": "雷声", "difficulty": 3 },
+        { "id": "g4s1u3w007", "word": "typhoon", "meaning": "台风", "difficulty": 3 },
+        { "id": "g4s1u3w008", "word": "foggy", "meaning": "有雾的", "difficulty": 2 },
+        { "id": "g4s1u3w009", "word": "breeze", "meaning": "微风", "difficulty": 3 },
+        { "id": "g4s1u3w010", "word": "forecast", "meaning": "预报", "difficulty": 3 }
+      ]
+    },
+    {
+      "unit": 4,
+      "name": "Clothes",
+      "words": [
+        { "id": "g4s1u4w001", "word": "trousers", "meaning": "裤子", "difficulty": 3 },
+        { "id": "g4s1u4w002", "word": "sweater", "meaning": "毛衣", "difficulty": 2 },
+        { "id": "g4s1u4w003", "word": "jacket", "meaning": "夹克", "difficulty": 2 },
+        { "id": "g4s1u4w004", "word": "uniform", "meaning": "制服", "difficulty": 3 },
+        { "id": "g4s1u4w005", "word": "raincoat", "meaning": "雨衣", "difficulty": 3 },
+        { "id": "g4s1u4w006", "word": "slippers", "meaning": "拖鞋", "difficulty": 3 },
+        { "id": "g4s1u4w007", "word": "sneakers", "meaning": "运动鞋", "difficulty": 3 },
+        { "id": "g4s1u4w008", "word": "pajamas", "meaning": "睡衣", "difficulty": 3 },
+        { "id": "g4s1u4w009", "word": "backpack", "meaning": "背包", "difficulty": 2 },
+        { "id": "g4s1u4w010", "word": "sunglasses", "meaning": "太阳镜", "difficulty": 3 }
+      ]
+    }
+  ]
+}

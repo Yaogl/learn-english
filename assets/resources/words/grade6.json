@@ -1,0 +1,70 @@
+{
+  "grade": 6,
+  "semester": 1,
+  "units": [
+    {
+      "unit": 1,
+      "name": "Science",
+      "words": [
+        { "id": "g6s1u1w001", "word": "experiment", "meaning": "实验", "difficulty": 3 },
+        { "id": "g6s1u1w002", "word": "molecule", "meaning": "分子", "difficulty": 3 },
+        { "id": "g6s1u1w003", "word": "gravity", "meaning": "重力", "difficulty": 3 },
+        { "id": "g6s1u1w004", "word": "electricity", "meaning": "电", "difficulty": 3 },
+        { "id": "g6s1u1w005", "word": "magnet", "meaning": "磁铁", "difficulty": 2 },
+        { "id": "g6s1u1w006", "word": "telescope", "meaning": "望远镜", "difficulty": 3 },
+        { "id": "g6s1u1w007", "word": "microscope", "meaning": "显微镜", "difficulty": 3 },
+        { "id": "g6s1u1w008", "word": "discovery", "meaning": "发现", "difficulty": 3 },
+        { "id": "g6s1u1w009", "word": "research", "meaning": "研究", "difficulty": 3 },
+        { "id": "g6s1u1w010", "word": "invention", "meaning": "发明", "difficulty": 3 }
+      ]
+    },
+    {
+      "unit": 2,
+      "name": "Health",
+      "words": [
+        { "id": "g6s1u2w001", "word": "medicine", "meaning": "药", "difficulty": 3 },
+        { "id": "g6s1u2w002", "word": "stomachache", "meaning": "胃痛", "difficulty": 3 },
+        { "id": "g6s1u2w003", "word": "headache", "meaning": "头痛", "difficulty": 3 },
+        { "id": "g6s1u2w004", "word": "toothache", "meaning": "牙痛", "difficulty": 3 },
+        { "id": "g6s1u2w005", "word": "hospital", "meaning": "医院", "difficulty": 3 },
+        { "id": "g6s1u2w006", "word": "ambulance", "meaning": "救护车", "difficulty": 3 },
+        { "id": "g6s1u2w007", "word": "vitamin", "meaning": "维生素", "difficulty": 3 },
+        { "id": "g6s1u2w008", "word": "healthy", "meaning": "健康的", "difficulty": 3 },
+        { "id": "g6s1u2w009", "word": "exercise", "meaning": "锻炼", "difficulty": 3 },
+        { "id": "g6s1u2w010", "word": "temperature", "meaning": "体温", "difficulty": 3 }
+      ]
+    },
+    {
+      "unit": 3,
+      "name": "Environment",
+      "words": [
+        { "id": "g6s1u3w001", "word": "environment", "meaning": "环境", "difficulty": 3 },
+        { "id": "g6s1u3w002", "word": "pollution", "meaning": "污染", "difficulty": 3 },
+        { "id": "g6s1u3w003", "word": "recycle", "meaning": "回收", "difficulty": 3 },
+        { "id": "g6s1u3w004", "word": "plastic", "meaning": "塑料", "difficulty": 3 },
+        { "id": "g6s1u3w005", "word": "bottle", "meaning": "瓶子", "difficulty": 2 },
+        { "id": "g6s1u3w006", "word": "energy", "meaning": "能源", "difficulty": 3 },
+        { "id": "g6s1u3w007", "word": "protect", "meaning": "保护", "difficulty": 3 },
+        { "id": "g6s1u3w008", "word": "dangerous", "meaning": "危险的", "difficulty": 3 },
+        { "id": "g6s1u3w009", "word": "waste", "meaning": "浪费", "difficulty": 2 },
+        { "id": "g6s1u3w010", "word": "future", "meaning": "未来", "difficulty": 2 }
+      ]
+    },
+    {
+      "unit": 4,
+      "name": "Travel",
+      "words": [
+        { "id": "g6s1u4w001", "word": "adventure", "meaning": "冒险", "difficulty": 3 },
+        { "id": "g6s1u4w002", "word": "journey", "meaning": "旅程", "difficulty": 3 },
+        { "id": "g6s1u4w003", "word": "passport", "meaning": "护照", "difficulty": 3 },
+        { "id": "g6s1u4w004", "word": "luggage", "meaning": "行李", "difficulty": 3 },
+        { "id": "g6s1u4w005", "word": "airport", "meaning": "机场", "difficulty": 2 },
+        { "id": "g6s1u4w006", "word": "ticket", "meaning": "票", "difficulty": 2 },
+        { "id": "g6s1u4w007", "word": "passenger", "meaning": "乘客", "difficulty": 3 },
+        { "id": "g6s1u4w008", "word": "destination", "meaning": "目的地", "difficulty": 3 },
+        { "id": "g6s1u4w009", "word": "souvenir", "meaning": "纪念品", "difficulty": 3 },
+        { "id": "g6s1u4w010", "word": "experience", "meaning": "经历", "difficulty": 3 }
+      ]
+    }
+  ]
+}

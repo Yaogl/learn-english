@@ -33,6 +33,38 @@
         { "id": "g3s1u2w009", "word": "children", "meaning": "孩子们", "difficulty": 3 },
         { "id": "g3s1u2w010", "word": "parents", "meaning": "父母", "difficulty": 2 }
       ]
+    },
+    {
+      "unit": 3,
+      "name": "Animals",
+      "words": [
+        { "id": "g3s1u3w001", "word": "elephant", "meaning": "大象", "difficulty": 3 },
+        { "id": "g3s1u3w002", "word": "giraffe", "meaning": "长颈鹿", "difficulty": 3 },
+        { "id": "g3s1u3w003", "word": "monkey", "meaning": "猴子", "difficulty": 2 },
+        { "id": "g3s1u3w004", "word": "penguin", "meaning": "企鹅", "difficulty": 3 },
+        { "id": "g3s1u3w005", "word": "rabbit", "meaning": "兔子", "difficulty": 2 },
+        { "id": "g3s1u3w006", "word": "dolphin", "meaning": "海豚", "difficulty": 3 },
+        { "id": "g3s1u3w007", "word": "butterfly", "meaning": "蝴蝶", "difficulty": 3 },
+        { "id": "g3s1u3w008", "word": "crocodile", "meaning": "鳄鱼", "difficulty": 3 },
+        { "id": "g3s1u3w009", "word": "kangaroo", "meaning": "袋鼠", "difficulty": 3 },
+        { "id": "g3s1u3w010", "word": "squirrel", "meaning": "松鼠", "difficulty": 3 }
+      ]
+    },
+    {
+      "unit": 4,
+      "name": "Food & Drinks",
+      "words": [
+        { "id": "g3s1u4w001", "word": "chocolate", "meaning": "巧克力", "difficulty": 3 },
+        { "id": "g3s1u4w002", "word": "sandwich", "meaning": "三明治", "difficulty": 3 },
+        { "id": "g3s1u4w003", "word": "vegetable", "meaning": "蔬菜", "difficulty": 3 },
+        { "id": "g3s1u4w004", "word": "strawberry", "meaning": "草莓", "difficulty": 3 },
+        { "id": "g3s1u4w005", "word": "hamburger", "meaning": "汉堡包", "difficulty": 3 },
+        { "id": "g3s1u4w006", "word": "pineapple", "meaning": "菠萝", "difficulty": 3 },
+        { "id": "g3s1u4w007", "word": "mushroom", "meaning": "蘑菇", "difficulty": 3 },
+        { "id": "g3s1u4w008", "word": "cucumber", "meaning": "黄瓜", "difficulty": 3 },
+        { "id": "g3s1u4w009", "word": "spaghetti", "meaning": "意大利面", "difficulty": 3 },
+        { "id": "g3s1u4w010", "word": "pancake", "meaning": "煎饼", "difficulty": 2 }
+      ]
     }
   ]
 }

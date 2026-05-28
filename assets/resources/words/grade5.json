@@ -1,0 +1,70 @@
+{
+  "grade": 5,
+  "semester": 1,
+  "units": [
+    {
+      "unit": 1,
+      "name": "My Hobbies",
+      "words": [
+        { "id": "g5s1u1w001", "word": "hobby", "meaning": "爱好", "difficulty": 2 },
+        { "id": "g5s1u1w002", "word": "collect", "meaning": "收集", "difficulty": 3 },
+        { "id": "g5s1u1w003", "word": "stamp", "meaning": "邮票", "difficulty": 2 },
+        { "id": "g5s1u1w004", "word": "chess", "meaning": "象棋", "difficulty": 2 },
+        { "id": "g5s1u1w005", "word": "painting", "meaning": "绘画", "difficulty": 3 },
+        { "id": "g5s1u1w006", "word": "photograph", "meaning": "照片", "difficulty": 3 },
+        { "id": "g5s1u1w007", "word": "practice", "meaning": "练习", "difficulty": 3 },
+        { "id": "g5s1u1w008", "word": "guitar", "meaning": "吉他", "difficulty": 2 },
+        { "id": "g5s1u1w009", "word": "violin", "meaning": "小提琴", "difficulty": 3 },
+        { "id": "g5s1u1w010", "word": "badminton", "meaning": "羽毛球", "difficulty": 3 }
+      ]
+    },
+    {
+      "unit": 2,
+      "name": "Countries",
+      "words": [
+        { "id": "g5s1u2w001", "word": "country", "meaning": "国家", "difficulty": 2 },
+        { "id": "g5s1u2w002", "word": "Australia", "meaning": "澳大利亚", "difficulty": 3 },
+        { "id": "g5s1u2w003", "word": "Canada", "meaning": "加拿大", "difficulty": 2 },
+        { "id": "g5s1u2w004", "word": "England", "meaning": "英格兰", "difficulty": 2 },
+        { "id": "g5s1u2w005", "word": "France", "meaning": "法国", "difficulty": 2 },
+        { "id": "g5s1u2w006", "word": "Germany", "meaning": "德国", "difficulty": 3 },
+        { "id": "g5s1u2w007", "word": "Japanese", "meaning": "日本人", "difficulty": 3 },
+        { "id": "g5s1u2w008", "word": "Chinese", "meaning": "中国人", "difficulty": 2 },
+        { "id": "g5s1u2w009", "word": "American", "meaning": "美国人", "difficulty": 3 },
+        { "id": "g5s1u2w010", "word": "foreign", "meaning": "外国的", "difficulty": 3 }
+      ]
+    },
+    {
+      "unit": 3,
+      "name": "Feelings",
+      "words": [
+        { "id": "g5s1u3w001", "word": "excited", "meaning": "兴奋的", "difficulty": 3 },
+        { "id": "g5s1u3w002", "word": "worried", "meaning": "担心的", "difficulty": 3 },
+        { "id": "g5s1u3w003", "word": "surprised", "meaning": "惊讶的", "difficulty": 3 },
+        { "id": "g5s1u3w004", "word": "nervous", "meaning": "紧张的", "difficulty": 3 },
+        { "id": "g5s1u3w005", "word": "proud", "meaning": "骄傲的", "difficulty": 2 },
+        { "id": "g5s1u3w006", "word": "jealous", "meaning": "嫉妒的", "difficulty": 3 },
+        { "id": "g5s1u3w007", "word": "grateful", "meaning": "感激的", "difficulty": 3 },
+        { "id": "g5s1u3w008", "word": "confused", "meaning": "困惑的", "difficulty": 3 },
+        { "id": "g5s1u3w009", "word": "bored", "meaning": "无聊的", "difficulty": 2 },
+        { "id": "g5s1u3w010", "word": "disappointed", "meaning": "失望的", "difficulty": 3 }
+      ]
+    },
+    {
+      "unit": 4,
+      "name": "Nature",
+      "words": [
+        { "id": "g5s1u4w001", "word": "mountain", "meaning": "山", "difficulty": 3 },
+        { "id": "g5s1u4w002", "word": "waterfall", "meaning": "瀑布", "difficulty": 3 },
+        { "id": "g5s1u4w003", "word": "forest", "meaning": "森林", "difficulty": 2 },
+        { "id": "g5s1u4w004", "word": "island", "meaning": "岛屿", "difficulty": 2 },
+        { "id": "g5s1u4w005", "word": "desert", "meaning": "沙漠", "difficulty": 2 },
+        { "id": "g5s1u4w006", "word": "volcano", "meaning": "火山", "difficulty": 3 },
+        { "id": "g5s1u4w007", "word": "earthquake", "meaning": "地震", "difficulty": 3 },
+        { "id": "g5s1u4w008", "word": "hurricane", "meaning": "飓风", "difficulty": 3 },
+        { "id": "g5s1u4w009", "word": "ocean", "meaning": "海洋", "difficulty": 2 },
+        { "id": "g5s1u4w010", "word": "countryside", "meaning": "乡村", "difficulty": 3 }
+      ]
+    }
+  ]
+}
