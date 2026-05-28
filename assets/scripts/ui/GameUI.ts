@@ -5,6 +5,8 @@ import { getLevelParams } from '../data/LevelConfig';
 import { StorageManager } from '../data/StorageManager';
 import { GameState, LetterTile, LevelData, LevelSource } from '../data/Types';
 import { GameManager } from '../game/GameManager';
+import { ItemManager, ItemType } from '../game/ItemManager';
+import { AdManager } from '../utils/AdManager';
 
 const { ccclass, property } = _decorator;
 
@@ -56,9 +58,11 @@ export class GameUI extends Component {
   private levelData: LevelData | null = null;
   private tileNodes: Map<number, Node> = new Map();
   private comboSlotNodes: Node[] = [];
+  private itemManager: ItemManager | null = null;
 
   start() {
     this.resultPanel.active = false;
+    this.itemManager = new ItemManager();
 
     // Get level params from director
     const params = (director as any)._levelParams;
@@ -87,11 +91,15 @@ export class GameUI extends Component {
     });
 
     this.btnRemoveItem?.on(Node.EventType.TOUCH_END, () => {
-      this.gameManager?.useRemoveItem();
+      this.handleItemUse(ItemType.REMOVE_LETTER);
     });
 
     this.btnShuffleItem?.on(Node.EventType.TOUCH_END, () => {
-      this.gameManager?.useShuffleItem();
+      this.handleItemUse(ItemType.SHUFFLE);
+    });
+
+    this.btnHintItem?.on(Node.EventType.TOUCH_END, () => {
+      this.handleItemUse(ItemType.WORD_HINT);
     });
   }
 
@@ -209,6 +217,39 @@ export class GameUI extends Component {
     this.resultLabel.string = '槽位已满，游戏失败！';
     this.btnNextLevel.active = false;
     this.btnRetry.active = true;
+  }
+
+  private async handleItemUse(type: ItemType): Promise<void> {
+    if (!this.itemManager || !this.gameManager) return;
+
+    if (this.itemManager.getTotalUsesRemaining(type) > 0) {
+      this.itemManager.useItem(type);
+      this.applyItem(type);
+    } else {
+      const watched = await AdManager.showRewardedAd();
+      if (watched) {
+        this.itemManager.addPaidUses(type, 1);
+        this.itemManager.useItem(type);
+        this.applyItem(type);
+      }
+    }
+  }
+
+  private applyItem(type: ItemType): void {
+    switch (type) {
+      case ItemType.REMOVE_LETTER:
+        this.gameManager!.useRemoveItem();
+        break;
+      case ItemType.SHUFFLE:
+        this.gameManager!.useShuffleItem();
+        break;
+      case ItemType.WORD_HINT:
+        // TODO: implement highlight in GameManager
+        break;
+      case ItemType.EXTRA_TIME:
+        // TODO: implement in GameManager
+        break;
+    }
   }
 
   private goToNextLevel(): void {
