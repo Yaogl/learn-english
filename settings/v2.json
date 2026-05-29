@@ -1,0 +1,32 @@
+{
+  "general": {
+    "designResolution": {
+      "width": 720,
+      "height": 1280,
+      "fitWidth": false,
+      "fitHeight": true
+    },
+    "startScene": "Launch",
+    "groupList": ["default"],
+    "collisionMatrix": {}
+  },
+  "scenes": {
+    "Launch": "",
+    "MainMenu": "",
+    "LevelSelect": "",
+    "ThemeSelect": "",
+    "Game": "",
+    "Battle": "",
+    "Rank": "",
+    "ErrorBook": "",
+    "ParentCenter": ""
+  },
+  "build": {
+    "platform": "wechatgame",
+    "appid": "",
+    "remoteServerAddress": "",
+    "md5Cache": true,
+    "bundlePackages": [],
+    "bundleVue": false
+  }
+}
