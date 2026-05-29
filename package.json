@@ -1,7 +1,7 @@
 {
   "name": "word-match-game",
   "uuid": "f8a7b6c5-d4e3-2109-fedc-ba9876543210",
-  "version": "3.8.5",
+  "version": "3.8.8",
   "description": "English word matching elimination game for WeChat mini-game",
   "scripts": {
     "test": "jest",
@@ -9,7 +9,7 @@
     "build": "echo 'Open project in Cocos Creator to build'"
   },
   "creator": {
-    "version": "3.8.5"
+    "version": "3.8.8"
   },
   "devDependencies": {
     "typescript": "^5.3.0",
