@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm search *)",
+      "Bash(cat /tmp/superpowers/README.md | head -100)",
+      "Read(//tmp/superpowers/**)",
+      "Bash(cp -r /tmp/superpowers/skills \"d:/测试项目/自定义项目/.claude/skills\")",
+      "Bash(cp /tmp/superpowers/CLAUDE.md \"d:/测试项目/自定义项目/CLAUDE.md\")"
+    ]
+  }
+}

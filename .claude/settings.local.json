@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p \"d:/测试项目/自定义项目/docs/superpowers/specs\")"
+    ],
+    "additionalDirectories": [
+      "d:\\测试项目\\自定义项目\\docs\\superpowers"
+    ]
+  }
+}
