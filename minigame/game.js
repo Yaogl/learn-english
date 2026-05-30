@@ -6,6 +6,10 @@ import { ErrorBookScene } from './js/scenes/ErrorBookScene';
 import { RankScene } from './js/scenes/RankScene';
 import { BattleScene } from './js/scenes/BattleScene';
 import { ParentScene } from './js/scenes/ParentScene';
+import { CloudService } from './js/services/CloudService';
+
+// 初始化云开发
+CloudService.init();
 
 const canvas = wx.createCanvas();
 const ctx = canvas.getContext('2d');

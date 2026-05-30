@@ -1,5 +1,6 @@
 {
   "miniprogramRoot": "./",
+  "cloudfunctionRoot": "cloud/",
   "setting": {
     "urlCheck": false,
     "es6": true,
@@ -34,6 +35,7 @@
   "description": "英语单词消消乐",
   "libVersion": "3.16.1",
   "compileType": "game",
+  "cloudfunctionTemplateRoot": "",
   "condition": {},
   "simulatorPluginLibVersion": {},
   "packOptions": {
