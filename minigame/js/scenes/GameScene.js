@@ -60,6 +60,8 @@ export class GameScene extends BaseScene {
     this.memoryTimer = 30;
     this.memoryWords = this.stageData.words;
     this.memoryIndex = 0;
+    this.memoryRound = 1;
+    this.memoryMaxRounds = 3;
 
     // 游戏阶段
     this.letters = [];
@@ -150,7 +152,7 @@ export class GameScene extends BaseScene {
   }
 
   /**
-   * 生成平铺字母
+   * 生成平铺字母 - 铺满屏幕
    */
   generateLetters() {
     const allLetters = [];
@@ -161,7 +163,9 @@ export class GameScene extends BaseScene {
       }
     }
 
-    const extraCount = this.stageData.extraLetters;
+    // 增加干扰字母，让屏幕铺满
+    const wordLetters = allLetters.length;
+    const extraCount = Math.max(this.stageData.extraLetters, 12 - wordLetters);
     const pool = 'abcdefghijklmnopqrstuvwxyz';
     for (let i = 0; i < extraCount; i++) {
       const idx = (this.stage * 3 + i * 7) % pool.length;
@@ -266,7 +270,7 @@ export class GameScene extends BaseScene {
   }
 
   /**
-   * 记忆单词阶段 - 增强版
+   * 记忆单词阶段 - 铺满屏幕 + 多轮展示
    */
   renderMemory(ctx, w, h) {
     // 境界信息
@@ -274,79 +278,109 @@ export class GameScene extends BaseScene {
     ctx.font = 'bold 14px "Microsoft YaHei", sans-serif';
     ctx.fillStyle = realm.color;
     ctx.textAlign = 'center';
-    ctx.fillText(`${realm.icon} ${realm.name} · 第${this.stage}关`, w / 2, 35);
+    ctx.fillText(`${realm.icon} ${realm.name} · 第${this.stage}关`, w / 2, 30);
 
-    // 标题
-    ctx.font = 'bold 18px "Microsoft YaHei", sans-serif';
-    ctx.fillStyle = '#333';
-    ctx.fillText('记住这些单词！', w / 2, 60);
+    // 轮次信息
+    ctx.font = 'bold 13px "Microsoft YaHei", sans-serif';
+    ctx.fillStyle = '#999';
+    ctx.fillText(`第 ${this.memoryRound} / ${this.memoryMaxRounds} 轮`, w / 2, 48);
 
     // 倒计时
     const timerColor = this.memoryTimer <= 5 ? '#FF6B6B' : '#4CAF50';
-    ctx.font = 'bold 24px "Microsoft YaHei", sans-serif';
+    ctx.font = 'bold 20px "Microsoft YaHei", sans-serif';
     ctx.fillStyle = timerColor;
     ctx.textAlign = 'right';
-    ctx.fillText(`${Math.ceil(this.memoryTimer)}s`, w - 20, 35);
+    ctx.fillText(`${Math.ceil(this.memoryTimer)}s`, w - 15, 30);
 
     // 进度条
-    const barW = w - 40;
-    const barY = 72;
+    const barW = w - 30;
+    const barY = 58;
     ctx.fillStyle = '#E0E0E0';
-    this.roundRect(ctx, 20, barY, barW, 6, 3);
+    this.roundRect(ctx, 15, barY, barW, 5, 3);
     ctx.fill();
     ctx.fillStyle = timerColor;
-    this.roundRect(ctx, 20, barY, barW * (this.memoryTimer / 30), 6, 3);
+    this.roundRect(ctx, 15, barY, barW * (this.memoryTimer / 30), 5, 3);
     ctx.fill();
 
-    // 单词卡片 - 铺满屏幕
-    const cardW = w - 40;
-    const cardH = 100;
-    const startX = 20;
-    const startY = 90;
-    const gap = 10;
+    // 单词网格 - 铺满屏幕
+    const words = this.memoryWords;
+    const cols = words.length <= 2 ? 1 : 2;
+    const rows = Math.ceil(words.length / cols);
+    const cardGap = 10;
+    const topY = 72;
+    const bottomY = h - 120;
+    const availableH = bottomY - topY;
+    const cardH = Math.min(140, (availableH - (rows - 1) * cardGap) / rows);
+    const cardW = (w - 30 - (cols - 1) * cardGap) / cols;
+    const startX = 15;
 
-    for (let i = 0; i < this.memoryWords.length; i++) {
-      const tw = this.memoryWords[i];
-      const y = startY + i * (cardH + gap);
-      if (y > h - 80) break;
+    for (let i = 0; i < words.length; i++) {
+      const tw = words[i];
+      const col = i % cols;
+      const row = Math.floor(i / cols);
+      const x = startX + col * (cardW + cardGap);
+      const y = topY + row * (cardH + cardGap);
 
-      this.drawCard(ctx, startX, y, cardW, cardH, { border: '#4CAF50' });
+      this.drawCard(ctx, x, y, cardW, cardH, { border: '#4CAF50' });
 
-      // 英文单词
-      ctx.font = 'bold 28px "Microsoft YaHei", sans-serif';
+      // 英文单词（大字）
+      ctx.font = `bold ${Math.min(32, cardW * 0.18)}px "Microsoft YaHei", sans-serif`;
       ctx.fillStyle = '#333';
       ctx.textAlign = 'center';
-      ctx.fillText(tw.word, w / 2, y + 28);
+      ctx.fillText(tw.word, x + cardW / 2, y + cardH * 0.22);
 
       // 音标
-      ctx.font = '14px sans-serif';
+      ctx.font = `${Math.min(14, cardW * 0.08)}px sans-serif`;
       ctx.fillStyle = '#999';
-      ctx.fillText(tw.phonetic || '', w / 2, y + 48);
+      ctx.fillText(tw.phonetic || '', x + cardW / 2, y + cardH * 0.38);
 
-      // 中文 + 过去式
-      let detail = tw.meaning;
+      // 中文释义
+      ctx.font = `bold ${Math.min(16, cardW * 0.09)}px "Microsoft YaHei", sans-serif`;
+      ctx.fillStyle = '#4CAF50';
+      ctx.fillText(tw.meaning, x + cardW / 2, y + cardH * 0.55);
+
+      // 过去式
       if (tw.past) {
-        detail += `  |  过去式: ${tw.past}`;
+        ctx.font = `${Math.min(13, cardW * 0.07)}px "Microsoft YaHei", sans-serif`;
+        ctx.fillStyle = '#FF9800';
+        ctx.fillText(`过去式: ${tw.past}`, x + cardW / 2, y + cardH * 0.7);
       }
-      ctx.font = '14px "Microsoft YaHei", sans-serif';
-      ctx.fillStyle = '#666';
-      ctx.fillText(detail, w / 2, y + 68);
 
       // 例句
       if (tw.example) {
-        ctx.font = '12px "Microsoft YaHei", sans-serif';
-        ctx.fillStyle = '#4CAF50';
-        ctx.fillText(tw.example, w / 2, y + 88);
+        ctx.font = `${Math.min(12, cardW * 0.065)}px "Microsoft YaHei", sans-serif`;
+        ctx.fillStyle = '#666';
+        const exLines = this.wrapTextLines(ctx, tw.example, cardW - 20);
+        for (let j = 0; j < Math.min(2, exLines.length); j++) {
+          ctx.fillText(exLines[j], x + cardW / 2, y + cardH * 0.85 + j * 14);
+        }
       }
     }
 
     // 底部按钮
     this.buttons = [];
-    this.addButton(w / 2 - 60, h - 65, 120, 40, '开始挑战', '#4CAF50', () => {
-      this.state = 'playing';
-      this.animTime = 0;
-      this.generateLetters();
-    });
+    const btnW = 120;
+    const btnH = 40;
+    const btnY = h - 60;
+
+    if (this.memoryRound < this.memoryMaxRounds) {
+      this.addButton(w / 2 - btnW - 8, btnY, btnW, btnH, '下一轮', '#FF9800', () => {
+        this.memoryRound++;
+        this.animTime = 0;
+        this.memoryTimer = 30;
+      });
+      this.addButton(w / 2 + 8, btnY, btnW, btnH, '开始挑战', '#4CAF50', () => {
+        this.state = 'playing';
+        this.animTime = 0;
+        this.generateLetters();
+      });
+    } else {
+      this.addButton(w / 2 - btnW / 2, btnY, btnW, btnH, '开始挑战', '#4CAF50', () => {
+        this.state = 'playing';
+        this.animTime = 0;
+        this.generateLetters();
+      });
+    }
     this.renderButtons(ctx);
   }
 
