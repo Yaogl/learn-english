@@ -58,24 +58,24 @@ export class MainMenu extends BaseScene {
       ctx.fillRect(0, 0, w, h);
     }
 
-    // 底部入口区域
-    const entryY = h * 0.6;
-    const entryH = h * 0.38;
+    // 底部入口区域 - icon-bg.png 全宽铺底
+    const entryY = h * 0.58;
+    const entryH = h * 0.4;
 
-    // icon-bg.png 居中绘制
+    // icon-bg.png 全宽绘制（保持比例，宽度撑满）
     if (this.iconBgReady) {
       const imgRatio = this.iconBgImage.width / this.iconBgImage.height;
-      const drawH = entryH;
-      const drawW = drawH * imgRatio;
-      const drawX = (w - drawW) / 2;
-      ctx.drawImage(this.iconBgImage, drawX, entryY, drawW, drawH);
+      const drawW = w;
+      const drawH = drawW / imgRatio;
+      const drawY = entryY + (entryH - drawH) / 2;
+      ctx.drawImage(this.iconBgImage, 0, drawY, drawW, drawH);
     } else {
       ctx.fillStyle = 'rgba(255,255,255,0.3)';
       this.roundRect(ctx, 12, entryY, w - 24, entryH, 20);
       ctx.fill();
     }
 
-    // 8个菜单按钮 - 4列2行
+    // 8个菜单按钮 - 4列2行，图标居中在 frame 内
     const menuItems = [
       { label: '好友对战', scene: 'battle' },
       { label: '闯关模式', scene: 'levels' },
@@ -89,9 +89,14 @@ export class MainMenu extends BaseScene {
 
     const cols = 4;
     const rows = 2;
-    const btnW = w / cols;
-    const btnH = entryH / rows;
-    const iconSize = Math.min(btnW * 0.7, btnH * 0.55);
+    const padX = w * 0.06;
+    const padTop = entryH * 0.22;
+    const padBottom = entryH * 0.08;
+    const contentW = w - padX * 2;
+    const contentH = entryH - padTop - padBottom;
+    const btnW = contentW / cols;
+    const btnH = contentH / rows;
+    const iconSize = Math.min(btnW * 0.75, btnH * 0.6);
 
     this.buttons = [];
 
@@ -99,8 +104,8 @@ export class MainMenu extends BaseScene {
       const item = menuItems[i];
       const col = i % cols;
       const row = Math.floor(i / cols);
-      const cx = col * btnW + btnW / 2;
-      const cy = entryY + row * btnH + btnH / 2;
+      const cx = padX + col * btnW + btnW / 2;
+      const cy = entryY + padTop + row * btnH + btnH / 2;
 
       if (this.iconsReady) {
         // 从精灵图裁切
@@ -129,7 +134,7 @@ export class MainMenu extends BaseScene {
       }
 
       this.addButton(
-        col * btnW, entryY + row * btnH,
+        padX + col * btnW, entryY + padTop + row * btnH,
         btnW, btnH,
         '', 'transparent',
         () => {
