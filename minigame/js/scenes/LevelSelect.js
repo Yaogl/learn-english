@@ -1,46 +1,47 @@
 import { BaseScene } from './BaseScene';
-import { GameData } from '../data/GameData';
-import { CultivationSystem } from '../data/CultivationSystem';
+import { getAllRealms, getRealmByStage, getStageIndexInRealm, getRealmTotalStages, getTotalStages } from '../data/LevelData';
 
+/**
+ * 关卡选择 - 12境界藤蔓关卡
+ */
 export class LevelSelect extends BaseScene {
   constructor() {
     super();
-    this.source = 'textbook';
-    this.selectedGrade = 0;
-    this.selectedSemester = 0;
-    this.completedStages = 0;
-    this.view = 'realms';
-    this.selectedRealm = -1;
+    this.view = 'realms'; // realms, stages
+    this.selectedRealm = null;
+    this.completedStages = [];
+    this.scrollY = 0;
   }
 
   onEnter(params) {
     super.onEnter(params);
-    this.source = params?.source || 'textbook';
-    this.selectedGrade = 0;
-    this.selectedSemester = 0;
-    this.completedStages = this.loadCompletedStages();
     this.view = 'realms';
-    this.selectedRealm = -1;
+    this.selectedRealm = null;
+    this.completedStages = this.loadCompletedStages();
+    this.scrollY = 0;
   }
 
   loadCompletedStages() {
     try {
       const data = wx.getStorageSync('completed_stages');
-      return data ? JSON.parse(data).length : 0;
+      return data ? JSON.parse(data) : [];
     } catch (e) {
-      return 0;
+      return [];
     }
   }
 
   render(ctx, w, h) {
-    this.drawSkyBackground(ctx, w, h);
+    const bg = ctx.createLinearGradient(0, 0, 0, h);
+    bg.addColorStop(0, '#E8F5E9');
+    bg.addColorStop(1, '#C8E6C9');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, w, h);
 
     this.buttons = [];
     this.addButton(10, 10, 60, 30, '← 返回', 'rgba(0,0,0,0.3)', () => {
       if (this.view === 'stages') {
-        this.view = 'grades';
-      } else if (this.view === 'grades') {
         this.view = 'realms';
+        this.scrollY = 0;
       } else {
         this.manager.switchTo('mainMenu');
       }
@@ -48,9 +49,7 @@ export class LevelSelect extends BaseScene {
 
     if (this.view === 'realms') {
       this.renderRealms(ctx, w, h);
-    } else if (this.view === 'grades') {
-      this.renderGrades(ctx, w, h);
-    } else if (this.view === 'stages') {
+    } else {
       this.renderStages(ctx, w, h);
     }
 
@@ -58,192 +57,189 @@ export class LevelSelect extends BaseScene {
   }
 
   renderRealms(ctx, w, h) {
-    this.drawTitle(ctx, '修炼境界', w / 2, 45, 22, '#5D4037');
-
-    const realm = CultivationSystem.getCurrentRealm(this.completedStages);
-    // 进度条
-    const barY = 62;
-    const barW = w - 60;
-    const barH = 10;
-    ctx.fillStyle = 'rgba(0,0,0,0.08)';
-    this.roundRect(ctx, 30, barY, barW, barH, 5);
-    ctx.fill();
-
-    const progress = realm.progress;
-    ctx.fillStyle = realm.realm.color;
-    this.roundRect(ctx, 30, barY, barW * progress, barH, 5);
-    ctx.fill();
-
-    ctx.font = 'bold 12px "Microsoft YaHei", sans-serif';
-    ctx.fillStyle = '#666';
+    ctx.font = 'bold 22px "Microsoft YaHei", sans-serif';
+    ctx.fillStyle = '#333';
     ctx.textAlign = 'center';
-    ctx.fillText(CultivationSystem.getFullLabel(this.completedStages), w / 2, barY + 22);
+    ctx.fillText('修炼境界', w / 2, 45);
 
-    const realms = CultivationSystem.getRealms();
-    const startY = 95;
-    const itemH = 58;
-    const cardW = w - 40;
+    // 进度
+    const totalCompleted = this.completedStages.length;
+    const totalStages = getTotalStages();
+    ctx.font = '13px "Microsoft YaHei", sans-serif';
+    ctx.fillStyle = '#999';
+    ctx.fillText(`已通关 ${totalCompleted}/${totalStages} 关`, w / 2, 65);
 
-    realms.forEach((r, i) => {
-      const y = startY + i * (itemH + 8);
-      if (y > h - 20) return;
+    // 境界列表
+    const realms = getAllRealms();
+    const startY = 80;
+    const itemH = 65;
+    const cardW = w - 30;
+    const maxScroll = Math.max(0, realms.length * (itemH + 10) - (h - 100));
 
-      const isUnlocked = this.completedStages >= CultivationSystem.getTotalStagesForRealm(i) - r.maxStage;
-      const isCurrent = realm.realm.id === r.id;
+    this.maxScrollY = maxScroll;
+
+    for (let i = 0; i < realms.length; i++) {
+      const realm = realms[i];
+      const y = startY + i * (itemH + 10) - this.scrollY;
+      if (y < 60 || y > h) continue;
+
+      const isUnlocked = totalCompleted >= realm.startStage - 1;
+      const completedInRealm = this.completedStages.filter(
+        s => s >= realm.startStage && s <= realm.endStage
+      ).length;
+      const totalInRealm = realm.endStage - realm.startStage + 1;
 
       ctx.save();
       if (!isUnlocked) ctx.globalAlpha = 0.4;
 
-      this.drawMenuCard(ctx, 20, y, cardW, itemH, {
-        bgTop: '#fff',
-        bgBottom: isCurrent ? r.color + '15' : '#f9f9f9',
-        border: isCurrent ? r.color : '#E8E8E8',
-        accentColor: isUnlocked ? r.color : '#ccc',
-      });
+      // 卡片
+      this.drawCard(ctx, 15, y, cardW, itemH, { border: isUnlocked ? realm.color : '#ddd' });
 
-      // Icon
-      ctx.font = '22px sans-serif';
+      // 图标
+      ctx.font = '28px sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText(isUnlocked ? r.icon : '🔒', 48, y + itemH / 2 + 4);
+      ctx.fillText(isUnlocked ? realm.icon : '🔒', 50, y + itemH / 2 + 5);
 
-      // Name
-      ctx.font = 'bold 15px "Microsoft YaHei", sans-serif';
+      // 名称
+      ctx.font = 'bold 16px "Microsoft YaHei", sans-serif';
       ctx.fillStyle = isUnlocked ? '#333' : '#aaa';
       ctx.textAlign = 'left';
-      ctx.fillText(r.name, 78, y + 22);
+      ctx.fillText(realm.name, 80, y + 25);
 
-      // Desc
+      // 描述
       ctx.font = '12px "Microsoft YaHei", sans-serif';
       ctx.fillStyle = '#999';
-      ctx.fillText(r.desc, 78, y + 42);
+      ctx.fillText(realm.desc, 80, y + 45);
 
-      if (isUnlocked) {
-        const completed = Math.max(0, this.completedStages - (CultivationSystem.getTotalStagesForRealm(i) - r.maxStage));
-        ctx.font = '12px "Microsoft YaHei", sans-serif';
-        ctx.fillStyle = r.color;
-        ctx.textAlign = 'right';
-        ctx.fillText(`${Math.min(completed, r.maxStage)}/${r.maxStage}`, cardW + 10, y + 22);
+      // 进度
+      ctx.font = '12px "Microsoft YaHei", sans-serif';
+      ctx.fillStyle = realm.color;
+      ctx.textAlign = 'right';
+      ctx.fillText(`${completedInRealm}/${totalInRealm}`, cardW + 5, y + 25);
+
+      // 进度条
+      const barW = 60;
+      const barY = y + itemH - 18;
+      ctx.fillStyle = '#eee';
+      this.roundRect(ctx, cardW - barW - 15, barY, barW, 6, 3);
+      ctx.fill();
+      if (completedInRealm > 0) {
+        ctx.fillStyle = realm.color;
+        this.roundRect(ctx, cardW - barW - 15, barY, barW * (completedInRealm / totalInRealm), 6, 3);
+        ctx.fill();
       }
 
       ctx.restore();
 
       if (isUnlocked) {
-        this.addButton(20, y, cardW, itemH, '', 'transparent', () => {
-          this.selectedRealm = i;
-          this.view = 'grades';
+        this.addButton(15, y, cardW, itemH, '', 'transparent', () => {
+          this.selectedRealm = realm;
+          this.view = 'stages';
+          this.scrollY = 0;
         });
       }
-    });
-  }
-
-  renderGrades(ctx, w, h) {
-    const realm = CultivationSystem.getRealmByIndex(this.selectedRealm);
-    this.drawTitle(ctx, `${realm.name} · 选择课本`, w / 2, 45, 20, '#5D4037');
-
-    const grades = GameData.getGrades();
-    const startY = 75;
-    const cardW = w - 40;
-    const cardH = 65;
-
-    grades.forEach((grade, i) => {
-      const y = startY + i * (cardH + 12);
-
-      this.drawMenuCard(ctx, 20, y, cardW, cardH, {
-        bgTop: '#fff',
-        bgBottom: '#f5f5f5',
-        border: '#E8E8E8',
-        accentColor: realm.color,
-      });
-
-      ctx.font = 'bold 16px "Microsoft YaHei", sans-serif';
-      ctx.fillStyle = '#333';
-      ctx.textAlign = 'left';
-      ctx.fillText(grade.label, 40, y + 30);
-
-      ctx.font = '12px "Microsoft YaHei", sans-serif';
-      ctx.fillStyle = '#999';
-      ctx.fillText(`${grade.semesters || 2}个学期`, 40, y + 50);
-
-      ctx.fillStyle = realm.color;
-      ctx.textAlign = 'right';
-      ctx.fillText('→', cardW + 10, y + 35);
-
-      this.addButton(20, y, cardW, cardH, '', 'transparent', () => {
-        this.selectedGrade = i;
-        this.view = 'stages';
-      });
-    });
+    }
   }
 
   renderStages(ctx, w, h) {
-    const realm = CultivationSystem.getRealmByIndex(this.selectedRealm);
-    const grade = GameData.getGrades()[this.selectedGrade];
-    this.drawTitle(ctx, `${realm.name} · ${grade.label}`, w / 2, 40, 18, '#5D4037');
+    const realm = this.selectedRealm;
+    if (!realm) return;
 
-    // 学期选择
-    const semY = 58;
-    const semW = (w - 60) / 2;
-    for (let s = 0; s < 2; s++) {
-      const x = 20 + s * (semW + 20);
-      const selected = this.selectedSemester === s;
+    // 标题
+    ctx.font = 'bold 18px "Microsoft YaHei", sans-serif';
+    ctx.fillStyle = realm.color;
+    ctx.textAlign = 'center';
+    ctx.fillText(`${realm.icon} ${realm.name}`, w / 2, 40);
 
-      ctx.fillStyle = selected ? realm.color + '25' : '#fff';
-      this.roundRect(ctx, x, semY, semW, 32, 8);
-      ctx.fill();
-      ctx.strokeStyle = selected ? realm.color : '#ddd';
-      ctx.lineWidth = 1.5;
-      this.roundRect(ctx, x, semY, semW, 32, 8);
-      ctx.stroke();
+    ctx.font = '13px "Microsoft YaHei", sans-serif';
+    ctx.fillStyle = '#999';
+    ctx.fillText(realm.desc, w / 2, 60);
 
-      ctx.font = 'bold 13px "Microsoft YaHei", sans-serif';
-      ctx.fillStyle = selected ? realm.color : '#666';
-      ctx.textAlign = 'center';
-      ctx.fillText(s === 0 ? '上学期' : '下学期', x + semW / 2, semY + 20);
+    // 藤蔓 + 关卡叶子
+    const totalStages = realm.endStage - realm.startStage + 1;
+    const cols = 4;
+    const cellSize = Math.min(65, (w - 50) / cols);
+    const gap = 12;
+    const startX = (w - cols * (cellSize + gap) + gap) / 2;
+    const startY = 80;
+    const rows = Math.ceil(totalStages / cols);
+    const maxScroll = Math.max(0, rows * (cellSize + gap) - (h - 120));
 
-      this.addButton(x, semY, semW, 32, '', 'transparent', () => {
-        this.selectedSemester = s;
-      });
-    }
+    this.maxScrollY = maxScroll;
 
-    // 单元关卡
-    const unitStartY = 100;
-    const unitCount = GameData.getUnitCount(grade.id, this.selectedSemester + 1);
-    const cols = 3;
-    const cellW = (w - 50) / cols;
-    const cellH = 80;
+    // 藤蔓主线
+    ctx.save();
+    ctx.strokeStyle = '#8BC34A';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    const vineX = startX + cellSize / 2;
+    ctx.moveTo(vineX, startY - this.scrollY);
+    ctx.lineTo(vineX, startY + rows * (cellSize + gap) - this.scrollY);
+    ctx.stroke();
+    ctx.restore();
 
-    for (let i = 0; i < unitCount; i++) {
+    for (let i = 0; i < totalStages; i++) {
+      const stageNum = realm.startStage + i;
       const col = i % cols;
       const row = Math.floor(i / cols);
-      const x = 20 + col * (cellW + 5);
-      const y = unitStartY + row * (cellH + 10);
+      const x = startX + col * (cellSize + gap);
+      const y = startY + row * (cellSize + gap) - this.scrollY;
 
-      this.drawMenuCard(ctx, x, y, cellW, cellH, {
-        bgTop: '#fff',
-        bgBottom: '#fafafa',
-        border: '#E8E8E8',
-        accentColor: realm.color,
-      });
+      if (y < 60 || y > h) continue;
 
-      ctx.font = 'bold 14px "Microsoft YaHei", sans-serif';
-      ctx.fillStyle = '#333';
+      const isCompleted = this.completedStages.includes(stageNum);
+      const isCurrent = !isCompleted && stageNum <= this.completedStages.length + 1;
+      const isLocked = !isCompleted && !isCurrent;
+
+      // 叶子/果实
+      ctx.save();
+      if (isLocked) ctx.globalAlpha = 0.3;
+
+      // 形状
+      const cx = x + cellSize / 2;
+      const cy = y + cellSize / 2;
+
+      if (isCompleted) {
+        // 金色叶子
+        ctx.fillStyle = '#FFD700';
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, cellSize * 0.4, cellSize * 0.3, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#FFA000';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      } else if (isCurrent) {
+        // 绿色高亮
+        ctx.fillStyle = realm.color;
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, cellSize * 0.4, cellSize * 0.3, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      } else {
+        // 灰色
+        ctx.fillStyle = '#ddd';
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, cellSize * 0.4, cellSize * 0.3, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // 关卡号
+      ctx.font = `bold ${cellSize * 0.25}px "Microsoft YaHei", sans-serif`;
+      ctx.fillStyle = isCompleted ? '#fff' : (isCurrent ? '#fff' : '#999');
       ctx.textAlign = 'center';
-      ctx.fillText(`第${i + 1}单元`, x + cellW / 2, y + 30);
+      ctx.textBaseline = 'middle';
+      ctx.fillText(`${i + 1}`, cx, cy);
 
-      ctx.font = '12px "Microsoft YaHei", sans-serif';
-      ctx.fillStyle = '#999';
-      const words = GameData.getUnitWords(grade.id, this.selectedSemester + 1, i + 1);
-      const stageCount = words ? Math.min(Math.ceil(words.length / 2), 15) : 5;
-      ctx.fillText(`${stageCount}关`, x + cellW / 2, y + 50);
+      ctx.restore();
 
-      this.addButton(x, y, cellW, cellH, '', 'transparent', () => {
-        this.manager.switchTo('game', {
-          grade: grade.id,
-          semester: this.selectedSemester + 1,
-          unit: i + 1,
-          stage: 1,
+      // 点击进入
+      if (!isLocked) {
+        this.addButton(x, y, cellSize, cellSize, '', 'transparent', () => {
+          this.manager.switchTo('game', { stage: stageNum });
         });
-      });
+      }
     }
   }
 }
