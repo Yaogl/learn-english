@@ -1,5 +1,6 @@
 import { BaseScene } from './BaseScene';
 import { getAllRealms, getRealmByStage, getStageIndexInRealm, getRealmTotalStages, getTotalStages } from '../data/LevelData';
+import { Theme } from '../theme.js';
 
 /**
  * 关卡选择 - 12境界藤蔓关卡
@@ -31,14 +32,19 @@ export class LevelSelect extends BaseScene {
   }
 
   render(ctx, w, h) {
+    // 仙气背景
     const bg = ctx.createLinearGradient(0, 0, 0, h);
     bg.addColorStop(0, '#E8F5E9');
-    bg.addColorStop(1, '#C8E6C9');
+    bg.addColorStop(0.5, '#C8E6C9');
+    bg.addColorStop(1, '#A5D6A7');
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, w, h);
 
+    // 云雾装饰
+    this.drawCloudMist(ctx, w, h);
+
     this.buttons = [];
-    this.addButton(10, 10, 60, 30, '← 返回', 'rgba(0,0,0,0.3)', () => {
+    this.drawBackButton(ctx, 10, 10, () => {
       if (this.view === 'stages') {
         this.view = 'realms';
         this.scrollY = 0;
@@ -57,17 +63,13 @@ export class LevelSelect extends BaseScene {
   }
 
   renderRealms(ctx, w, h) {
-    ctx.font = 'bold 22px "Microsoft YaHei", sans-serif';
-    ctx.fillStyle = '#333';
-    ctx.textAlign = 'center';
-    ctx.fillText('修炼境界', w / 2, 45);
+    // 修仙风格标题
+    this.drawTitle(ctx, '修炼境界', w / 2, 45, 22, Theme.colors.text.primary);
 
     // 进度
     const totalCompleted = this.completedStages.length;
     const totalStages = getTotalStages();
-    ctx.font = '13px "Microsoft YaHei", sans-serif';
-    ctx.fillStyle = '#999';
-    ctx.fillText(`已通关 ${totalCompleted}/${totalStages} 关`, w / 2, 65);
+    this.drawSubTitle(ctx, `已通关 ${totalCompleted}/${totalStages} 关`, w / 2, 65);
 
     // 境界列表
     const realms = getAllRealms();
@@ -92,8 +94,11 @@ export class LevelSelect extends BaseScene {
       ctx.save();
       if (!isUnlocked) ctx.globalAlpha = 0.4;
 
-      // 卡片
-      this.drawCard(ctx, 15, y, cardW, itemH, { border: isUnlocked ? realm.color : '#ddd' });
+      // 灵气卡片
+      this.drawCard(ctx, 15, y, cardW, itemH, {
+        border: isUnlocked ? realm.color : '#ddd',
+        glow: isUnlocked ? realm.color : null,
+      });
 
       // 图标
       ctx.font = '28px sans-serif';
@@ -101,30 +106,33 @@ export class LevelSelect extends BaseScene {
       ctx.fillText(isUnlocked ? realm.icon : '🔒', 50, y + itemH / 2 + 5);
 
       // 名称
-      ctx.font = 'bold 16px "Microsoft YaHei", sans-serif';
-      ctx.fillStyle = isUnlocked ? '#333' : '#aaa';
+      ctx.font = `bold 16px ${Theme.fonts.primary}`;
+      ctx.fillStyle = isUnlocked ? Theme.colors.text.primary : Theme.colors.text.light;
       ctx.textAlign = 'left';
       ctx.fillText(realm.name, 80, y + 25);
 
       // 描述
-      ctx.font = '12px "Microsoft YaHei", sans-serif';
-      ctx.fillStyle = '#999';
+      ctx.font = `12px ${Theme.fonts.primary}`;
+      ctx.fillStyle = Theme.colors.text.muted;
       ctx.fillText(realm.desc, 80, y + 45);
 
       // 进度
-      ctx.font = '12px "Microsoft YaHei", sans-serif';
+      ctx.font = `12px ${Theme.fonts.primary}`;
       ctx.fillStyle = realm.color;
       ctx.textAlign = 'right';
       ctx.fillText(`${completedInRealm}/${totalInRealm}`, cardW + 5, y + 25);
 
-      // 进度条
+      // 灵气进度条
       const barW = 60;
       const barY = y + itemH - 18;
-      ctx.fillStyle = '#eee';
+      ctx.fillStyle = '#E8E8E8';
       this.roundRect(ctx, cardW - barW - 15, barY, barW, 6, 3);
       ctx.fill();
       if (completedInRealm > 0) {
-        ctx.fillStyle = realm.color;
+        const progressGrad = ctx.createLinearGradient(cardW - barW - 15, barY, cardW - barW - 15 + barW * (completedInRealm / totalInRealm), barY);
+        progressGrad.addColorStop(0, realm.color);
+        progressGrad.addColorStop(1, this.lightenColor(realm.color, 20));
+        ctx.fillStyle = progressGrad;
         this.roundRect(ctx, cardW - barW - 15, barY, barW * (completedInRealm / totalInRealm), 6, 3);
         ctx.fill();
       }
@@ -145,15 +153,9 @@ export class LevelSelect extends BaseScene {
     const realm = this.selectedRealm;
     if (!realm) return;
 
-    // 标题
-    ctx.font = 'bold 18px "Microsoft YaHei", sans-serif';
-    ctx.fillStyle = realm.color;
-    ctx.textAlign = 'center';
-    ctx.fillText(`${realm.icon} ${realm.name}`, w / 2, 40);
-
-    ctx.font = '13px "Microsoft YaHei", sans-serif';
-    ctx.fillStyle = '#999';
-    ctx.fillText(realm.desc, w / 2, 60);
+    // 修仙风格标题
+    this.drawTitle(ctx, `${realm.icon} ${realm.name}`, w / 2, 40, 18, realm.color);
+    this.drawSubTitle(ctx, realm.desc, w / 2, 60);
 
     // 藤蔓 + 关卡叶子
     const totalStages = realm.endStage - realm.startStage + 1;
@@ -167,10 +169,15 @@ export class LevelSelect extends BaseScene {
 
     this.maxScrollY = maxScroll;
 
-    // 藤蔓主线
+    // 灵藤主线
     ctx.save();
-    ctx.strokeStyle = '#8BC34A';
+    const vineGrad = ctx.createLinearGradient(0, startY - this.scrollY, 0, startY + rows * (cellSize + gap) - this.scrollY);
+    vineGrad.addColorStop(0, '#8BC34A');
+    vineGrad.addColorStop(0.5, '#66BB6A');
+    vineGrad.addColorStop(1, '#4CAF50');
+    ctx.strokeStyle = vineGrad;
     ctx.lineWidth = 4;
+    ctx.lineCap = 'round';
     ctx.beginPath();
     const vineX = startX + cellSize / 2;
     ctx.moveTo(vineX, startY - this.scrollY);
@@ -200,8 +207,10 @@ export class LevelSelect extends BaseScene {
       const cy = y + cellSize / 2;
 
       if (isCompleted) {
-        // 金色叶子
+        // 金色灵果 - 已完成
         ctx.fillStyle = '#FFD700';
+        ctx.shadowColor = '#FFD700';
+        ctx.shadowBlur = 6;
         ctx.beginPath();
         ctx.ellipse(cx, cy, cellSize * 0.4, cellSize * 0.3, 0, 0, Math.PI * 2);
         ctx.fill();
@@ -209,25 +218,27 @@ export class LevelSelect extends BaseScene {
         ctx.lineWidth = 2;
         ctx.stroke();
       } else if (isCurrent) {
-        // 绿色高亮
+        // 绿色灵果 - 当前关卡
         ctx.fillStyle = realm.color;
+        ctx.shadowColor = realm.color;
+        ctx.shadowBlur = 8;
         ctx.beginPath();
         ctx.ellipse(cx, cy, cellSize * 0.4, cellSize * 0.3, 0, 0, Math.PI * 2);
         ctx.fill();
-        ctx.strokeStyle = '#fff';
+        ctx.strokeStyle = '#FFFFFF';
         ctx.lineWidth = 2;
         ctx.stroke();
       } else {
-        // 灰色
-        ctx.fillStyle = '#ddd';
+        // 灰色灵果 - 未解锁
+        ctx.fillStyle = '#E0E0E0';
         ctx.beginPath();
         ctx.ellipse(cx, cy, cellSize * 0.4, cellSize * 0.3, 0, 0, Math.PI * 2);
         ctx.fill();
       }
 
       // 关卡号
-      ctx.font = `bold ${cellSize * 0.25}px "Microsoft YaHei", sans-serif`;
-      ctx.fillStyle = isCompleted ? '#fff' : (isCurrent ? '#fff' : '#999');
+      ctx.font = `bold ${cellSize * 0.25}px ${Theme.fonts.primary}`;
+      ctx.fillStyle = isCompleted ? '#FFFFFF' : (isCurrent ? '#FFFFFF' : '#999999');
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(`${i + 1}`, cx, cy);

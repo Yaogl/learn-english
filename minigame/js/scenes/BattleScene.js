@@ -1,4 +1,5 @@
 import { BaseScene } from './BaseScene';
+import { Theme } from '../theme.js';
 
 export class BattleScene extends BaseScene {
   constructor() {
@@ -32,16 +33,22 @@ export class BattleScene extends BaseScene {
   }
 
   render(ctx, w, h) {
+    // 仙气背景 - 对战专用
     const bg = ctx.createLinearGradient(0, 0, 0, h);
-    bg.addColorStop(0, '#EDE7F6');
-    bg.addColorStop(1, '#D1C4E9');
+    bg.addColorStop(0, '#EDE7F6');      // 浅紫仙气
+    bg.addColorStop(0.5, '#D1C4E9');    // 中紫
+    bg.addColorStop(1, '#B39DDB');      // 深紫
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, w, h);
 
-    this.drawTitle(ctx, '好友对战', w / 2, 45, 22, '#5D4037');
+    // 云雾装饰
+    this.drawCloudMist(ctx, w, h);
+
+    // 修仙风格标题
+    this.drawTitle(ctx, '好友对战', w / 2, 45, 22, Theme.colors.text.primary);
 
     this.buttons = [];
-    this.addButton(10, 10, 60, 30, '← 返回', 'rgba(0,0,0,0.3)', () => {
+    this.drawBackButton(ctx, 10, 10, () => {
       this.manager.switchTo('mainMenu');
     });
 
@@ -62,18 +69,25 @@ export class BattleScene extends BaseScene {
     const cardX = (w - cardW) / 2;
     const cardY = h * 0.22;
 
-    this.drawCard(ctx, cardX, cardY, cardW, cardH, { border: '#9C27B0' });
+    // 灵气卡片
+    this.drawCard(ctx, cardX, cardY, cardW, cardH, {
+      border: '#9C27B0',
+      glow: '#9C27B0',
+    });
+
+    // 对战图标 - 灵气光效
+    this.drawSpiritGlow(ctx, w / 2, cardY + 80, 25, '#9C27B0', 1.2);
 
     ctx.font = '60px sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText('⚔️', w / 2, cardY + 80);
 
-    ctx.font = '18px "Microsoft YaHei", sans-serif';
-    ctx.fillStyle = '#333';
+    ctx.font = `18px ${Theme.fonts.primary}`;
+    ctx.fillStyle = Theme.colors.text.primary;
     ctx.fillText('邀请好友一起学英语', w / 2, cardY + 120);
 
-    ctx.font = '13px "Microsoft YaHei", sans-serif';
-    ctx.fillStyle = '#999';
+    ctx.font = `13px ${Theme.fonts.primary}`;
+    ctx.fillStyle = Theme.colors.text.muted;
     ctx.fillText('比比谁记单词更快', w / 2, cardY + 145);
 
     this.addButton(w / 2 - 70, cardY + cardH + 25, 140, 44, '开始匹配', '#9C27B0', () => {
@@ -86,10 +100,12 @@ export class BattleScene extends BaseScene {
     const dots = '.'.repeat(Math.floor(Date.now() / 500) % 4);
     this.drawTitle(ctx, `匹配中${dots}`, w / 2, h * 0.4, 20, '#9C27B0');
 
-    ctx.font = '14px "Microsoft YaHei", sans-serif';
-    ctx.fillStyle = '#999';
-    ctx.textAlign = 'center';
-    ctx.fillText('正在寻找对手...', w / 2, h * 0.45);
+    // 灵气光效动画
+    const t = this.animTime || 0;
+    const pulse = 0.5 + Math.sin(t * 3) * 0.5;
+    this.drawSpiritGlow(ctx, w / 2, h * 0.45, 30, '#9C27B0', pulse);
+
+    this.drawSubTitle(ctx, '正在寻找对手...', w / 2, h * 0.45);
   }
 
   renderResult(ctx, w, h) {
@@ -100,33 +116,42 @@ export class BattleScene extends BaseScene {
     const cardX = (w - cardW) / 2;
     const cardY = h * 0.18;
 
-    this.drawCard(ctx, cardX, cardY, cardW, cardH, { border: '#9C27B0' });
+    // 灵气卡片
+    this.drawCard(ctx, cardX, cardY, cardW, cardH, {
+      border: '#9C27B0',
+      glow: '#9C27B0',
+    });
 
-    this.drawTitle(ctx, '对战结果', w / 2, cardY + 35, 20, '#5D4037');
+    this.drawTitle(ctx, '对战结果', w / 2, cardY + 35, 20, Theme.colors.text.primary);
 
     const vsY = cardY + 80;
 
+    // 玩家
     ctx.font = '36px sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText('🧑', w / 4, vsY);
-    ctx.font = '13px "Microsoft YaHei", sans-serif';
-    ctx.fillStyle = '#333';
+    ctx.font = `13px ${Theme.fonts.primary}`;
+    ctx.fillStyle = Theme.colors.text.primary;
     ctx.fillText('我', w / 4, vsY + 28);
-    ctx.font = 'bold 28px "Microsoft YaHei", sans-serif';
+    ctx.font = `bold 28px ${Theme.fonts.primary}`;
     ctx.fillStyle = '#4CAF50';
     ctx.fillText(`${this.playerScore}`, w / 4, vsY + 60);
 
-    this.drawTitle(ctx, 'VS', w / 2, vsY + 25, 16, '#999');
+    // VS 灵气光效
+    this.drawSpiritGlow(ctx, w / 2, vsY + 25, 15, '#9C27B0', 0.8);
+    this.drawTitle(ctx, 'VS', w / 2, vsY + 25, 16, Theme.colors.text.muted);
 
+    // 对手
     ctx.font = '36px sans-serif';
     ctx.fillText(this.opponent.avatar, w * 3 / 4, vsY);
-    ctx.font = '13px "Microsoft YaHei", sans-serif';
-    ctx.fillStyle = '#333';
+    ctx.font = `13px ${Theme.fonts.primary}`;
+    ctx.fillStyle = Theme.colors.text.primary;
     ctx.fillText(this.opponent.name, w * 3 / 4, vsY + 28);
-    ctx.font = 'bold 28px "Microsoft YaHei", sans-serif';
+    ctx.font = `bold 28px ${Theme.fonts.primary}`;
     ctx.fillStyle = '#FF6B6B';
     ctx.fillText(`${this.opponent.words}`, w * 3 / 4, vsY + 60);
 
+    // 结果
     const isWin = this.playerScore >= this.opponent.words;
     this.drawTitle(ctx, isWin ? '你赢了！' : '再接再厉！', w / 2, cardY + cardH - 65, 22,
       isWin ? '#4CAF50' : '#FF6B6B');
@@ -137,7 +162,7 @@ export class BattleScene extends BaseScene {
       this.opponent = null;
     });
 
-    this.addButton(10, 10, 60, 30, '← 返回', 'rgba(0,0,0,0.3)', () => {
+    this.drawBackButton(ctx, 10, 10, () => {
       this.manager.switchTo('mainMenu');
     });
   }

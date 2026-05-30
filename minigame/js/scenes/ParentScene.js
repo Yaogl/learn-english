@@ -1,15 +1,18 @@
 import { BaseScene } from './BaseScene';
 import { CultivationSystem } from '../data/CultivationSystem';
+import { Theme } from '../theme.js';
 
 export class ParentScene extends BaseScene {
   constructor() {
     super();
     this.stats = {};
+    this.weeklyData = []; // 缓存周数据，避免每帧随机
   }
 
   onEnter() {
     super.onEnter();
     this.stats = this.loadStats();
+    this.weeklyData = this.generateWeeklyData();
   }
 
   loadStats() {
@@ -27,17 +30,32 @@ export class ParentScene extends BaseScene {
     }
   }
 
+  // 生成周数据（缓存，避免每帧随机）
+  generateWeeklyData() {
+    const data = [];
+    for (let i = 0; i < 7; i++) {
+      data.push(Math.random() * 0.7 + 0.1); // 0.1 到 0.8 之间的随机值
+    }
+    return data;
+  }
+
   render(ctx, w, h) {
+    // 仙气背景 - 家长面板专用
     const bg = ctx.createLinearGradient(0, 0, 0, h);
-    bg.addColorStop(0, '#FFF3E0');
-    bg.addColorStop(1, '#FFE0B2');
+    bg.addColorStop(0, '#E8F5E9');      // 浅绿仙气
+    bg.addColorStop(0.5, '#C8E6C9');    // 中绿
+    bg.addColorStop(1, '#A5D6A7');      // 深绿
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, w, h);
 
-    this.drawTitle(ctx, '家长面板', w / 2, 45, 22, '#5D4037');
+    // 云雾装饰
+    this.drawCloudMist(ctx, w, h);
+
+    // 修仙风格标题
+    this.drawTitle(ctx, '家长面板', w / 2, 45, 22, Theme.colors.text.primary);
 
     this.buttons = [];
-    this.addButton(10, 10, 60, 30, '← 返回', 'rgba(0,0,0,0.3)', () => {
+    this.drawBackButton(ctx, 10, 10, () => {
       this.manager.switchTo('mainMenu');
     });
 
@@ -47,19 +65,23 @@ export class ParentScene extends BaseScene {
     const realmCardW = w - 40;
     const realmCardH = 80;
 
-    this.drawCard(ctx, 20, realmCardY, realmCardW, realmCardH, { border: realm.realm.color });
+    // 灵气卡片
+    this.drawCard(ctx, 20, realmCardY, realmCardW, realmCardH, {
+      border: realm.realm.color,
+      glow: realm.realm.color,
+    });
 
     ctx.font = '32px sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText(realm.realm.icon, 60, realmCardY + 45);
 
-    ctx.font = 'bold 18px "Microsoft YaHei", sans-serif';
+    ctx.font = `bold 18px ${Theme.fonts.primary}`;
     ctx.fillStyle = realm.realm.color;
     ctx.textAlign = 'left';
     ctx.fillText(CultivationSystem.getFullLabel(this.stats.totalStages || 0), 90, realmCardY + 30);
 
-    ctx.font = '13px "Microsoft YaHei", sans-serif';
-    ctx.fillStyle = '#999';
+    ctx.font = `13px ${Theme.fonts.primary}`;
+    ctx.fillStyle = Theme.colors.text.muted;
     ctx.fillText(realm.realm.desc, 90, realmCardY + 52);
 
     // 统计卡片
@@ -80,33 +102,35 @@ export class ParentScene extends BaseScene {
       const x = 18 + col * (cardW + 14);
       const y = startY + row * (cardH + 10);
 
+      // 灵气卡片
       this.drawMenuCard(ctx, x, y, cardW, cardH, {
-        bgTop: '#fff',
-        bgBottom: '#f9f9f9',
+        bgTop: '#FFFFFF',
+        bgBottom: '#FAFAFA',
         border: '#E8E8E8',
+        spiritPattern: stat.color,
       });
 
       ctx.font = '22px sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText(stat.icon, x + 28, y + 35);
 
-      ctx.font = 'bold 20px "Microsoft YaHei", sans-serif';
+      ctx.font = `bold 20px ${Theme.fonts.primary}`;
       ctx.fillStyle = stat.color;
       ctx.textAlign = 'left';
       ctx.fillText(stat.value, x + 55, y + 38);
 
-      ctx.font = '12px "Microsoft YaHei", sans-serif';
-      ctx.fillStyle = '#999';
+      ctx.font = `12px ${Theme.fonts.primary}`;
+      ctx.fillStyle = Theme.colors.text.muted;
       ctx.fillText(stat.label, x + 55, y + 58);
     });
 
-    // 学习趋势
+    // 学习趋势 - 使用缓存数据
     const calY = startY + 2 * (cardH + 10) + 10;
     const calH = 120;
     this.drawCard(ctx, 18, calY, w - 36, calH, { border: '#E8E8E8' });
 
-    ctx.font = 'bold 14px "Microsoft YaHei", sans-serif';
-    ctx.fillStyle = '#333';
+    ctx.font = `bold 14px ${Theme.fonts.primary}`;
+    ctx.fillStyle = Theme.colors.text.primary;
     ctx.textAlign = 'left';
     ctx.fillText('本周学习趋势', 35, calY + 25);
 
@@ -116,15 +140,19 @@ export class ParentScene extends BaseScene {
 
     days.forEach((day, i) => {
       const x = 35 + i * barW;
-      const barH2 = Math.random() * maxBarH * 0.7 + 10;
+      const barH2 = this.weeklyData[i] * maxBarH; // 使用缓存数据
       const barY2 = calY + calH - 20 - barH2;
 
-      ctx.fillStyle = i === 6 ? '#4CAF50' : '#4A90D9';
+      // 灵气渐变柱状图
+      const barGrad = ctx.createLinearGradient(0, barY2, 0, barY2 + barH2);
+      barGrad.addColorStop(0, i === 6 ? '#66BB6A' : '#4A90D9');
+      barGrad.addColorStop(1, i === 6 ? '#4CAF50' : '#2196F3');
+      ctx.fillStyle = barGrad;
       this.roundRect(ctx, x + 5, barY2, barW - 10, barH2, 3);
       ctx.fill();
 
-      ctx.font = '10px "Microsoft YaHei", sans-serif';
-      ctx.fillStyle = '#999';
+      ctx.font = `10px ${Theme.fonts.primary}`;
+      ctx.fillStyle = Theme.colors.text.muted;
       ctx.textAlign = 'center';
       ctx.fillText(`周${day}`, x + barW / 2, calY + calH - 6);
     });
