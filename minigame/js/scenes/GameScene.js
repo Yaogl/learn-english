@@ -144,7 +144,9 @@ export class GameScene extends BaseScene {
       this.winAnim += dt;
     }
 
-    if (this.state === 'playing' && this.matchedWords.size === this.targetStrings.length) {
+    // 胜利条件：屏幕上所有字母都被消除
+    const allCleared = this.state === 'playing' && this.letters.every(l => !l.visible);
+    if (allCleared) {
       this.state = 'win';
       this.winAnim = 0;
       this.saveProgress();
@@ -152,26 +154,32 @@ export class GameScene extends BaseScene {
   }
 
   /**
-   * 生成平铺字母 - 铺满屏幕
+   * 生成平铺字母 - 单词字母重复铺满屏幕
+   * 例如单词 "got" → 屏幕铺满 g,o,t,g,o,t,g,o,t... 重复多次
+   * 孩子反复拼同一个单词，加深记忆
    */
   generateLetters() {
     const allLetters = [];
 
+    // 每个单词的字母重复铺满（约15-20组）
+    const repeatCount = 15;
     for (const word of this.targetStrings) {
-      for (const char of word) {
-        allLetters.push({ text: char, groupSize: 1 });
+      for (let r = 0; r < repeatCount; r++) {
+        for (const char of word) {
+          allLetters.push({ text: char, groupSize: 1 });
+        }
       }
     }
 
-    // 增加干扰字母，让屏幕铺满
-    const wordLetters = allLetters.length;
-    const extraCount = Math.max(this.stageData.extraLetters, 12 - wordLetters);
+    // 少量干扰字母（3-5个）
+    const distractorCount = Math.min(5, Math.floor(this.stage / 20) + 2);
     const pool = 'abcdefghijklmnopqrstuvwxyz';
-    for (let i = 0; i < extraCount; i++) {
-      const idx = (this.stage * 3 + i * 7) % pool.length;
+    for (let i = 0; i < distractorCount; i++) {
+      const idx = (this.stage * 3 + i * 11) % pool.length;
       allLetters.push({ text: pool[idx], groupSize: 1 });
     }
 
+    // 打乱
     for (let i = allLetters.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [allLetters[i], allLetters[j]] = [allLetters[j], allLetters[i]];
@@ -398,7 +406,9 @@ export class GameScene extends BaseScene {
     ctx.font = '13px "Microsoft YaHei", sans-serif';
     ctx.textAlign = 'center';
     ctx.fillStyle = '#999';
-    ctx.fillText(`第${this.stage}关 · ${this.matchedWords.size}/${this.targetStrings.length}`, w / 2, 25);
+    const remaining = this.letters.filter(l => l.visible).length;
+    const total = this.letters.length;
+    ctx.fillText(`第${this.stage}关 · 剩余 ${remaining}/${total} 个字母`, w / 2, 25);
 
     const realm = this.stageData.realm;
     ctx.font = '12px "Microsoft YaHei", sans-serif';
@@ -559,7 +569,7 @@ export class GameScene extends BaseScene {
     ctx.font = '14px "Microsoft YaHei", sans-serif';
     ctx.fillStyle = '#666';
     ctx.fillText(
-      isWin ? `成功掌握 ${this.targetStrings.length} 个单词` : '槽位已满，再试一次！',
+      isWin ? `完成练习，单词已牢记！` : '槽位已满，再试一次！',
       w / 2, cardY + 140
     );
 
