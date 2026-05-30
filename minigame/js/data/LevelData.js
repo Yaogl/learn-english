@@ -5,18 +5,18 @@
 
 // 境界定义
 const REALMS = [
-  { id: 'fanren', name: '凡人', icon: '🌿', desc: '初入仙途，初识修行', color: '#8BC34A', startStage: 1, endStage: 10 },
-  { id: 'lianqi', name: '练气', icon: '💨', desc: '灵气入体，正式踏入仙途', color: '#4CAF50', startStage: 11, endStage: 25 },
-  { id: 'zhuji', name: '筑基', icon: '🏔️', desc: '根基成型，拥有正式仙力', color: '#009688', startStage: 26, endStage: 45 },
-  { id: 'jindan', name: '金丹', icon: '✨', desc: '凝结金丹，成为一方强者', color: '#FFD700', startStage: 46, endStage: 70 },
-  { id: 'yuanying', name: '元婴', icon: '👶', desc: '元神凝聚，可元神出窍', color: '#FF9800', startStage: 71, endStage: 90 },
-  { id: 'huashen', name: '化神', icon: '🔥', desc: '感悟天地法则，行走大千世界', color: '#F44336', startStage: 91, endStage: 110 },
-  { id: 'lianxu', name: '炼虚', icon: '🌀', desc: '炼化天地灵气，闯天道试炼', color: '#9C27B0', startStage: 111, endStage: 120 },
-  { id: 'heti', name: '合体', icon: '⚔️', desc: '肉身与灵力合一，镇压上古凶兽', color: '#673AB7', startStage: 121, endStage: 130 },
-  { id: 'dacheng', name: '大乘', icon: '🌟', desc: '行走九天，收集九天神草', color: '#2196F3', startStage: 131, endStage: 140 },
-  { id: 'dujie', name: '渡劫', icon: '⚡', desc: '天劫将至，抵御雷劫', color: '#E91E63', startStage: 141, endStage: 170 },
-  { id: 'dixian', name: '地仙', icon: '🌍', desc: '位列地仙，执掌一方天地', color: '#795548', startStage: 171, endStage: 190 },
-  { id: 'tianxian', name: '天仙', icon: '👑', desc: '功行圆满，羽化登仙', color: '#FFD700', startStage: 191, endStage: 200 },
+  { id: 'fanren', name: '凡人', icon: '🌿', desc: '初入仙途，初识修行', color: '#6bcb77', startStage: 1, endStage: 10 },
+  { id: 'lianqi', name: '练气', icon: '💨', desc: '灵气入体，正式踏入仙途', color: '#4d96ff', startStage: 11, endStage: 25 },
+  { id: 'zhuji', name: '筑基', icon: '🏔️', desc: '根基成型，拥有正式仙力', color: '#4dffe8', startStage: 26, endStage: 45 },
+  { id: 'jindan', name: '金丹', icon: '✨', desc: '凝结金丹，成为一方强者', color: '#ffd700', startStage: 46, endStage: 70 },
+  { id: 'yuanying', name: '元婴', icon: '👶', desc: '元神凝聚，可元神出窍', color: '#ff9500', startStage: 71, endStage: 90 },
+  { id: 'huashen', name: '化神', icon: '🔥', desc: '感悟天地法则，行走大千世界', color: '#c084fc', startStage: 91, endStage: 110 },
+  { id: 'lianxu', name: '炼虚', icon: '🌀', desc: '炼化天地灵气，闯天道试炼', color: '#9eb0c9', startStage: 111, endStage: 120 },
+  { id: 'heti', name: '合体', icon: '⚔️', desc: '肉身与灵力合一，镇压上古凶兽', color: '#ff6b9d', startStage: 121, endStage: 130 },
+  { id: 'dacheng', name: '大乘', icon: '🌟', desc: '行走九天，收集九天神草', color: '#ff9500', startStage: 131, endStage: 140 },
+  { id: 'dujie', name: '渡劫', icon: '⚡', desc: '天劫将至，抵御雷劫', color: '#ff6b6b', startStage: 141, endStage: 170 },
+  { id: 'dixian', name: '地仙', icon: '🌍', desc: '位列地仙，执掌一方天地', color: '#b8a898', startStage: 171, endStage: 190 },
+  { id: 'tianxian', name: '天仙', icon: '👑', desc: '功行圆满，羽化登仙', color: '#ffd700', startStage: 191, endStage: 200 },
 ];
 
 // 单词库（按难度分级，含音标、过去式、例句）

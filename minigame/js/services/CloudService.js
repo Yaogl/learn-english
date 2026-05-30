@@ -176,57 +176,59 @@ export class CloudService {
   // ==================== 好友对战 ====================
 
   /**
-   * 创建对战房间
+   * 调用对战云函数
    */
-  static async createBattleRoom(openid) {
+  static async callBattleRoom(action, extra = {}) {
     if (!this.isAvailable()) return null;
     try {
-      const roomId = Math.random().toString(36).substring(2, 8).toUpperCase();
-      await db.collection('battle_rooms').add({
-        data: {
-          roomId,
-          creator: openid,
-          status: 'waiting',
-          createTime: db.serverDate(),
-        }
+      const res = await wx.cloud.callFunction({
+        name: 'battleRoom',
+        data: { action, ...extra },
       });
-      return roomId;
+      return res.result || null;
     } catch (e) {
-      console.warn('[Cloud] 创建房间失败', e);
+      console.warn('[Cloud] battleRoom 调用失败', e);
       return null;
     }
+  }
+
+  /**
+   * 创建对战房间
+   */
+  static async createBattleRoom() {
+    const res = await this.callBattleRoom('create');
+    if (res?.code === 0) return res.data.roomId;
+    return null;
   }
 
   /**
    * 加入对战房间
    */
-  static async joinBattleRoom(roomId, openid) {
-    if (!this.isAvailable()) return null;
-    try {
-      const res = await db.collection('battle_rooms')
-        .where({ roomId, status: 'waiting' })
-        .limit(1)
-        .get();
-
-      if (res.data.length === 0) return null;
-
-      const room = res.data[0];
-      await db.collection('battle_rooms').doc(room._id).update({
-        data: {
-          joiner: openid,
-          status: 'ready',
-          words: this.generateBattleWords(),
-        }
-      });
-      return room;
-    } catch (e) {
-      console.warn('[Cloud] 加入房间失败', e);
-      return null;
-    }
+  static async joinBattleRoom(roomId) {
+    const res = await this.callBattleRoom('join', { roomId });
+    if (res?.code === 0) return res.data;
+    return { error: res?.msg || '加入失败' };
   }
 
   /**
-   * 生成对战单词
+   * 获取对战房间状态
+   */
+  static async getBattleRoomStatus(roomId) {
+    const res = await this.callBattleRoom('getStatus', { roomId });
+    if (res?.code === 0) return res.data;
+    return null;
+  }
+
+  /**
+   * 更新对战分数
+   */
+  static async updateBattleProgress(roomId, score) {
+    const res = await this.callBattleRoom('updateScore', { roomId, score });
+    return res?.code === 0;
+  }
+
+  /**
+   * 生成对战单词（本地兜底）
    */
   static generateBattleWords() {
     const words = [
@@ -235,52 +237,5 @@ export class CloudService {
     ];
     const shuffled = [...words].sort(() => Math.random() - 0.5);
     return shuffled.slice(0, 3);
-  }
-
-  /**
-   * 更新对战状态
-   */
-  static async updateBattleProgress(roomId, openid, score) {
-    if (!this.isAvailable()) return false;
-    try {
-      const res = await db.collection('battle_rooms')
-        .where({ roomId })
-        .limit(1)
-        .get();
-
-      if (res.data.length === 0) return false;
-
-      const room = res.data[0];
-      const isCreator = room.creator === openid;
-      const field = isCreator ? 'creatorScore' : 'joinerScore';
-
-      await db.collection('battle_rooms').doc(room._id).update({
-        data: {
-          [field]: score,
-          status: score >= 3 ? 'finished' : 'playing',
-        }
-      });
-      return true;
-    } catch (e) {
-      console.warn('[Cloud] 更新对战进度失败', e);
-      return false;
-    }
-  }
-
-  /**
-   * 获取对战房间状态
-   */
-  static async getBattleRoomStatus(roomId) {
-    if (!this.isAvailable()) return null;
-    try {
-      const res = await db.collection('battle_rooms')
-        .where({ roomId })
-        .limit(1)
-        .get();
-      return res.data.length > 0 ? res.data[0] : null;
-    } catch (e) {
-      console.warn('[Cloud] 获取房间状态失败', e);
-      return null;
-    }
   }
 }

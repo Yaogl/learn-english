@@ -1,4 +1,5 @@
 import { BaseScene } from './BaseScene';
+import { loadWrongWords, saveWrongWords as persistWrongWords } from '../data/WrongWordStore.js';
 import { Theme } from '../theme.js';
 
 export class ErrorBookScene extends BaseScene {
@@ -12,84 +13,87 @@ export class ErrorBookScene extends BaseScene {
 
   onEnter() {
     super.onEnter();
-    this.wrongWords = this.loadWrongWords();
+    this.reloadWrongWords();
     this.reviewMode = false;
     this.reviewIndex = 0;
     this.reviewAnswer = false;
-    const itemH = 60;
-    const totalH = 80 + this.wrongWords.length * itemH;
-    this.maxScrollY = Math.max(0, totalH - h);
+    this.scrollY = 0;
+    this.maxScrollY = 0;
+  }
+
+  reloadWrongWords() {
+    this.wrongWords = loadWrongWords();
   }
 
   loadWrongWords() {
-    try {
-      const data = wx.getStorageSync('wrong_words');
-      return data ? JSON.parse(data) : [];
-    } catch (e) {
-      return [];
-    }
+    return loadWrongWords();
   }
 
   render(ctx, w, h) {
-    // 仙气背景 - 错题本专用
-    const bg = ctx.createLinearGradient(0, 0, 0, h);
-    bg.addColorStop(0, '#F3E5F5');      // 浅紫仙气
-    bg.addColorStop(0.5, '#E1BEE7');    // 中紫
-    bg.addColorStop(1, '#CE93D8');      // 深紫
-    ctx.fillStyle = bg;
-    ctx.fillRect(0, 0, w, h);
-
-    // 云雾装饰
-    this.drawCloudMist(ctx, w, h);
-
+    this.drawPageBackground(ctx, w, h);
     this.buttons = [];
-    this.drawBackButton(ctx, 10, 10, () => {
+
+    if (!this.reviewMode) {
+      this.reloadWrongWords();
+    }
+
+    const onBack = () => {
       if (this.reviewMode) {
         this.reviewMode = false;
       } else {
         this.manager.switchTo('mainMenu');
       }
-    });
+    };
 
     if (this.reviewMode) {
+      this.drawBackButton(ctx, 10, 10, onBack);
       this.renderReview(ctx, w, h);
     } else {
-      this.renderList(ctx, w, h);
+      const { headerBottom } = this.drawPageHeader(ctx, w, '错题本', onBack);
+      this.renderList(ctx, w, h, headerBottom);
     }
 
     this.renderButtons(ctx);
   }
 
-  renderList(ctx, w, h) {
-    // 修仙风格标题
-    this.drawTitle(ctx, '错题本', w / 2, 45, 22, Theme.colors.text.primary);
-
+  renderList(ctx, w, h, headerBottom) {
     if (this.wrongWords.length === 0) {
       this.drawSubTitle(ctx, '暂无错词，继续加油！', w / 2, h / 2);
       return;
     }
 
-    this.drawSubTitle(ctx, `共 ${this.wrongWords.length} 个错词`, 20, 65);
+    const gap = Theme.layout.gap;
+    const subY = headerBottom + gap.sm + Theme.fonts.sizes.caption / 2;
+    ctx.font = `${Theme.fonts.sizes.caption}px ${Theme.fonts.primary}`;
+    ctx.fillStyle = Theme.colors.text.secondary;
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(`共 ${this.wrongWords.length} 个错词`, 20, subY);
+    ctx.textAlign = 'right';
+    ctx.fillStyle = Theme.colors.button.purple;
+    ctx.fillText('点击错词 · 斩心魔修复', w - 20, subY);
 
-    this.addButton(w - 120, 50, 100, 30, '开始复习', '#9C27B0', () => {
+    const btnY = Theme.layout.backBtn.y;
+    this.addButton(w - 120, btnY, 100, Theme.layout.backBtn.h, '开始复习', Theme.colors.button.purple, () => {
       this.reviewMode = true;
       this.reviewIndex = 0;
       this.reviewAnswer = false;
     });
 
-    const startY = 80;
+    const startY = subY + Theme.fonts.sizes.caption / 2 + gap.lg;
     const itemH = 60;
+    this.maxScrollY = Math.max(0, startY + this.wrongWords.length * itemH - h);
 
     this.wrongWords.forEach((word, i) => {
-      const y = startY + i * itemH;
-      if (y > h - 20) return;
+      const y = startY + i * itemH - this.scrollY;
+      if (y + itemH < startY || y > h - 20) return;
 
-      // 灵气卡片
-      this.drawMenuCard(ctx, 15, y, w - 30, itemH - 8, {
-        bgTop: '#FFFFFF',
-        bgBottom: '#FAFAFA',
-        border: '#E8E8E8',
-        spiritPattern: '#9C27B0',
+      const cardH = itemH - 8;
+      this.drawMenuCard(ctx, 15, y, w - 30, cardH, {
+        bgTop: Theme.colors.card.bgTop,
+        bgBottom: Theme.colors.card.bgBottom,
+        border: Theme.colors.button.purple,
+        spiritPattern: Theme.colors.button.purple,
       });
 
       ctx.font = `bold 18px ${Theme.fonts.primary}`;
@@ -101,17 +105,28 @@ export class ErrorBookScene extends BaseScene {
       ctx.fillStyle = Theme.colors.text.muted;
       ctx.fillText(word.meaning, 30, y + 44);
 
-      // 错误次数 - 灵气标记
       ctx.font = `12px ${Theme.fonts.primary}`;
-      ctx.fillStyle = '#FF6B6B';
+      ctx.fillStyle = Theme.colors.button.purple;
       ctx.textAlign = 'right';
-      ctx.fillText(`×${word.wrongCount || 1}`, w - 30, y + 30);
+      ctx.fillText('👿 斩心魔', w - 70, y + 22);
+
+      ctx.fillStyle = Theme.colors.button.danger;
+      ctx.fillText(`×${word.wrongCount || 1}`, w - 30, y + 44);
+
+      this.addButton(15, y, w - 30, cardH, '', null, () => {
+        this.startFixWord(word);
+      });
     });
+  }
+
+  /** 点击错词：进入心魔关（故事 → 记忆 → 拼写） */
+  startFixWord(word) {
+    this.manager.switchTo('game', { fromErrorBook: true, word });
   }
 
   renderReview(ctx, w, h) {
     if (this.reviewIndex >= this.wrongWords.length) {
-      this.drawTitle(ctx, '错词已全部复习完毕！', w / 2, h / 2, 18, '#4CAF50');
+      this.drawTitle(ctx, '错词已全部复习完毕！', w / 2, h / 2, 18, Theme.colors.button.primary);
       return;
     }
 
@@ -121,12 +136,15 @@ export class ErrorBookScene extends BaseScene {
     const cardX = (w - cardW) / 2;
     const cardY = h * 0.2;
 
-    this.drawTitle(ctx, `复习 ${this.reviewIndex + 1}/${this.wrongWords.length}`, w / 2, 45, 16, Theme.colors.text.secondary);
+    const back = Theme.layout.backBtn;
+    const titleSize = 16;
+    const titleY = back.y + back.h + Theme.layout.gap.lg + titleSize / 2;
+    this.drawTitle(ctx, `复习 ${this.reviewIndex + 1}/${this.wrongWords.length}`, w / 2, titleY, titleSize, Theme.colors.text.secondary);
 
     // 灵气卡片
     this.drawCard(ctx, cardX, cardY, cardW, cardH, {
-      border: '#9C27B0',
-      glow: '#9C27B0',
+      border: Theme.colors.button.purple,
+      glow: Theme.colors.button.purple,
     });
 
     ctx.font = `bold 40px ${Theme.fonts.primary}`;
@@ -136,7 +154,7 @@ export class ErrorBookScene extends BaseScene {
 
     if (this.reviewAnswer) {
       ctx.font = `22px ${Theme.fonts.primary}`;
-      ctx.fillStyle = '#9C27B0';
+      ctx.fillStyle = Theme.colors.button.purple;
       ctx.fillText(word.meaning, w / 2, cardY + 125);
 
       if (word.phonetic) {
@@ -148,11 +166,11 @@ export class ErrorBookScene extends BaseScene {
 
     this.buttons = [];
     if (!this.reviewAnswer) {
-      this.addButton(w / 2 - 55, cardY + cardH - 55, 110, 38, '显示答案', '#9C27B0', () => {
+      this.addButton(w / 2 - 55, cardY + cardH - 55, 110, 38, '显示答案', Theme.colors.button.purple, () => {
         this.reviewAnswer = true;
       });
     } else {
-      this.addButton(w / 2 - 115, cardY + cardH - 55, 108, 38, '记住了', '#4CAF50', () => {
+      this.addButton(w / 2 - 115, cardY + cardH - 55, 108, 38, '记住了', Theme.colors.button.primary, () => {
         this.wrongWords.splice(this.reviewIndex, 1);
         this.saveWrongWords();
         if (this.reviewIndex >= this.wrongWords.length) {
@@ -161,7 +179,7 @@ export class ErrorBookScene extends BaseScene {
           this.reviewAnswer = false;
         }
       });
-      this.addButton(w / 2 + 7, cardY + cardH - 55, 108, 38, '还不会', '#FF6B6B', () => {
+      this.addButton(w / 2 + 7, cardY + cardH - 55, 108, 38, '还不会', Theme.colors.button.danger, () => {
         this.reviewIndex++;
         this.reviewAnswer = false;
       });
@@ -173,8 +191,6 @@ export class ErrorBookScene extends BaseScene {
   }
 
   saveWrongWords() {
-    try {
-      wx.setStorageSync('wrong_words', JSON.stringify(this.wrongWords));
-    } catch (e) {}
+    persistWrongWords(this.wrongWords);
   }
 }

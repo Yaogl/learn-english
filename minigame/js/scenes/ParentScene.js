@@ -40,28 +40,15 @@ export class ParentScene extends BaseScene {
   }
 
   render(ctx, w, h) {
-    // 仙气背景 - 家长面板专用
-    const bg = ctx.createLinearGradient(0, 0, 0, h);
-    bg.addColorStop(0, '#E8F5E9');      // 浅绿仙气
-    bg.addColorStop(0.5, '#C8E6C9');    // 中绿
-    bg.addColorStop(1, '#A5D6A7');      // 深绿
-    ctx.fillStyle = bg;
-    ctx.fillRect(0, 0, w, h);
-
-    // 云雾装饰
-    this.drawCloudMist(ctx, w, h);
-
-    // 修仙风格标题
-    this.drawTitle(ctx, '家长面板', w / 2, 45, 22, Theme.colors.text.primary);
-
+    this.drawPageBackground(ctx, w, h);
     this.buttons = [];
-    this.drawBackButton(ctx, 10, 10, () => {
+
+    const { headerBottom } = this.drawPageHeader(ctx, w, '家长面板', () => {
       this.manager.switchTo('mainMenu');
     });
 
-    // 修为总览
     const realm = CultivationSystem.getCurrentRealm(this.stats.totalStages || 0);
-    const realmCardY = 65;
+    const realmCardY = headerBottom + Theme.layout.gap.sm;
     const realmCardW = w - 40;
     const realmCardH = 80;
 
@@ -75,14 +62,15 @@ export class ParentScene extends BaseScene {
     ctx.textAlign = 'center';
     ctx.fillText(realm.realm.icon, 60, realmCardY + 45);
 
-    ctx.font = `bold 18px ${Theme.fonts.primary}`;
+    ctx.font = `bold ${Theme.fonts.sizes.header}px ${Theme.fonts.primary}`;
     ctx.fillStyle = realm.realm.color;
     ctx.textAlign = 'left';
-    ctx.fillText(CultivationSystem.getFullLabel(this.stats.totalStages || 0), 90, realmCardY + 30);
+    ctx.textBaseline = 'middle';
+    ctx.fillText(CultivationSystem.getFullLabel(this.stats.totalStages || 0), 90, realmCardY + 32);
 
-    ctx.font = `13px ${Theme.fonts.primary}`;
+    ctx.font = `${Theme.fonts.sizes.caption}px ${Theme.fonts.primary}`;
     ctx.fillStyle = Theme.colors.text.muted;
-    ctx.fillText(realm.realm.desc, 90, realmCardY + 52);
+    ctx.fillText(realm.realm.desc, 90, realmCardY + 56);
 
     // 统计卡片
     const cardW = (w - 50) / 2;
@@ -90,10 +78,10 @@ export class ParentScene extends BaseScene {
     const startY = realmCardY + realmCardH + 15;
 
     const stats = [
-      { icon: '📝', label: '词汇量', value: `${this.stats.totalWords || 0}`, color: '#4CAF50' },
-      { icon: '✅', label: '通关', value: `${this.stats.totalStages || 0}`, color: '#FF9800' },
-      { icon: '⏱️', label: '学习时长', value: `${this.stats.totalMinutes || 0}分`, color: '#4A90D9' },
-      { icon: '🔥', label: '连续天数', value: `${this.stats.streak || 0}天`, color: '#FF6B6B' },
+      { icon: '📝', label: '词汇量', value: `${this.stats.totalWords || 0}`, color: Theme.colors.button.primary },
+      { icon: '✅', label: '通关', value: `${this.stats.totalStages || 0}`, color: Theme.colors.button.secondary },
+      { icon: '⏱️', label: '学习时长', value: `${this.stats.totalMinutes || 0}分`, color: Theme.colors.button.info },
+      { icon: '🔥', label: '连续天数', value: `${this.stats.streak || 0}天`, color: Theme.colors.button.danger },
     ];
 
     stats.forEach((stat, i) => {
@@ -104,9 +92,9 @@ export class ParentScene extends BaseScene {
 
       // 灵气卡片
       this.drawMenuCard(ctx, x, y, cardW, cardH, {
-        bgTop: '#FFFFFF',
-        bgBottom: '#FAFAFA',
-        border: '#E8E8E8',
+        bgTop: Theme.colors.card.bgTop,
+        bgBottom: Theme.colors.card.bgBottom,
+        border: Theme.colors.card.border,
         spiritPattern: stat.color,
       });
 
@@ -127,7 +115,7 @@ export class ParentScene extends BaseScene {
     // 学习趋势 - 使用缓存数据
     const calY = startY + 2 * (cardH + 10) + 10;
     const calH = 120;
-    this.drawCard(ctx, 18, calY, w - 36, calH, { border: '#E8E8E8' });
+    this.drawCard(ctx, 18, calY, w - 36, calH, { border: Theme.colors.card.border });
 
     ctx.font = `bold 14px ${Theme.fonts.primary}`;
     ctx.fillStyle = Theme.colors.text.primary;
@@ -145,8 +133,8 @@ export class ParentScene extends BaseScene {
 
       // 灵气渐变柱状图
       const barGrad = ctx.createLinearGradient(0, barY2, 0, barY2 + barH2);
-      barGrad.addColorStop(0, i === 6 ? '#66BB6A' : '#4A90D9');
-      barGrad.addColorStop(1, i === 6 ? '#4CAF50' : '#2196F3');
+      barGrad.addColorStop(0, i === 6 ? Theme.colors.button.primary : Theme.colors.button.info);
+      barGrad.addColorStop(1, i === 6 ? Theme.colors.button.primary : Theme.colors.accent.cyan);
       ctx.fillStyle = barGrad;
       this.roundRect(ctx, x + 5, barY2, barW - 10, barH2, 3);
       ctx.fill();

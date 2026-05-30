@@ -13,9 +13,8 @@ export class RankScene extends BaseScene {
     super.onEnter();
     this.rankList = this.loadRankData();
     this.tab = 'realms';
-    const itemH = 55;
-    const totalH = 100 + this.rankList.length * itemH;
-    this.maxScrollY = Math.max(0, totalH - h);
+    this.scrollY = 0;
+    this.maxScrollY = 0;
   }
 
   loadRankData() {
@@ -28,112 +27,74 @@ export class RankScene extends BaseScene {
   }
 
   render(ctx, w, h) {
-    // 仙气背景 - 排行榜专用
-    const bg = ctx.createLinearGradient(0, 0, 0, h);
-    bg.addColorStop(0, '#FFF8E1');      // 浅金仙气
-    bg.addColorStop(0.5, '#FFECB3');    // 中金
-    bg.addColorStop(1, '#FFE0B2');      // 深金
-    ctx.fillStyle = bg;
-    ctx.fillRect(0, 0, w, h);
-
-    // 云雾装饰
-    this.drawCloudMist(ctx, w, h);
-
-    // 修仙风格标题
-    this.drawTitle(ctx, '排行榜', w / 2, 45, 22, Theme.colors.text.primary);
-
+    this.drawPageBackground(ctx, w, h);
     this.buttons = [];
-    this.drawBackButton(ctx, 10, 10, () => {
+
+    const { headerBottom } = this.drawPageHeader(ctx, w, '排行榜', () => {
       this.manager.switchTo('mainMenu');
     });
 
-    // 灵气标签页
     const tabs = [
       { key: 'realms', label: '境界' },
       { key: 'words', label: '词汇' },
       { key: 'streak', label: '坚持' },
     ];
-
-    const tabW = (w - 50) / 3;
-    tabs.forEach((tab, i) => {
-      const x = 18 + i * (tabW + 7);
-      const selected = this.tab === tab.key;
-
-      // 灵气标签背景
-      if (selected) {
-        const tabGrad = ctx.createLinearGradient(x, 58, x, 88);
-        tabGrad.addColorStop(0, '#4CAF50');
-        tabGrad.addColorStop(1, '#66BB6A');
-        ctx.fillStyle = tabGrad;
-      } else {
-        ctx.fillStyle = '#FFFFFF';
-      }
-      this.roundRect(ctx, x, 58, tabW, 30, Theme.borderRadius.md);
-      ctx.fill();
-
-      ctx.font = `bold 13px ${Theme.fonts.primary}`;
-      ctx.fillStyle = selected ? '#FFFFFF' : Theme.colors.text.secondary;
-      ctx.textAlign = 'center';
-      ctx.fillText(tab.label, x + tabW / 2, 77);
-
-      this.addButton(x, 58, tabW, 30, '', 'transparent', () => {
-        this.tab = tab.key;
-      });
+    const startY = this.drawTabBar(ctx, w, tabs, this.tab, headerBottom, (key) => {
+      this.tab = key;
     });
 
-    const startY = 100;
     const itemH = 55;
+    this.maxScrollY = Math.max(0, startY + this.rankList.length * itemH - h);
 
     if (this.rankList.length === 0) {
       this.drawSubTitle(ctx, '暂无排行数据', w / 2, h / 2);
+      this.renderButtons(ctx);
       return;
     }
 
     this.rankList.forEach((item, i) => {
-      const y = startY + i * itemH;
-      if (y > h - 60) return;
+      const y = startY + i * itemH - this.scrollY;
+      if (y > h - 60 || y + itemH < startY - 20) return;
 
-      // 灵气卡片
+      const rankColors = [Theme.colors.accent.gold, '#c4c0c8', '#c9a882'];
       this.drawMenuCard(ctx, 15, y, w - 30, itemH - 6, {
-        bgTop: '#FFFFFF',
-        bgBottom: '#FAFAFA',
-        border: i < 3 ? ['#FFD700', '#C0C0C0', '#CD7F32'][i] : '#E8E8E8',
-        glow: i < 3 ? ['#FFD700', '#C0C0C0', '#CD7F32'][i] : null,
+        bgTop: Theme.colors.card.bgTop,
+        bgBottom: Theme.colors.card.bgBottom,
+        border: i < 3 ? rankColors[i] : Theme.colors.card.border,
+        glow: i < 3 ? rankColors[i] : null,
       });
 
-      // 排名
-      const rankColors = ['#FFD700', '#C0C0C0', '#CD7F32'];
-      ctx.font = `bold 16px ${Theme.fonts.primary}`;
+      ctx.font = `bold ${Theme.fonts.sizes.body}px ${Theme.fonts.primary}`;
       ctx.fillStyle = i < 3 ? rankColors[i] : Theme.colors.text.muted;
       ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
       ctx.fillText(`${i + 1}`, 40, y + 32);
 
-      // 头像
-      ctx.fillStyle = '#E0E0E0';
+      ctx.fillStyle = '#e8e4ef';
       ctx.beginPath();
       ctx.arc(72, y + 28, 16, 0, Math.PI * 2);
       ctx.fill();
       ctx.font = '14px sans-serif';
       ctx.fillText(item.avatar || '?', 72, y + 33);
 
-      // 名称
-      ctx.font = `bold 14px ${Theme.fonts.primary}`;
+      ctx.font = `bold ${Theme.fonts.sizes.caption}px ${Theme.fonts.primary}`;
       ctx.fillStyle = Theme.colors.text.primary;
       ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
       ctx.fillText(item.name || '匿名', 98, y + 24);
 
-      // 境界
-      ctx.font = `11px ${Theme.fonts.primary}`;
+      ctx.font = `${Theme.fonts.sizes.small}px ${Theme.fonts.primary}`;
       ctx.fillStyle = Theme.colors.text.muted;
-      ctx.fillText(CultivationSystem.getFullLabel(item.stages || 0), 98, y + 42);
+      ctx.fillText(CultivationSystem.getFullLabel(item.stages || 0), 98, y + 44);
 
-      // 分数
-      ctx.font = `14px ${Theme.fonts.primary}`;
-      ctx.fillStyle = '#4CAF50';
+      ctx.font = `${Theme.fonts.sizes.body}px ${Theme.fonts.primary}`;
+      ctx.fillStyle = Theme.colors.button.primary;
       ctx.textAlign = 'right';
       const score = this.tab === 'realms' ? CultivationSystem.getFullLabel(item.stages || 0) :
                     this.tab === 'words' ? `${item.words || 0}词` : `${item.streak || 0}天`;
       ctx.fillText(score, w - 25, y + 32);
     });
+
+    this.renderButtons(ctx);
   }
 }

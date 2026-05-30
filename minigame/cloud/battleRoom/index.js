@@ -17,7 +17,9 @@ function generateBattleWords() {
 }
 
 exports.main = async (event, context) => {
-  const { action, openid, roomId } = event;
+  const { action, roomId } = event;
+  const wxContext = cloud.getWXContext();
+  const openid = wxContext.OPENID;
 
   switch (action) {
     case 'create':
@@ -65,7 +67,7 @@ exports.main = async (event, context) => {
           }
         });
 
-        return { code: 0, data: { room, words } };
+        return { code: 0, data: { roomId, words, status: 'ready' } };
       } catch (e) {
         return { code: -1, msg: e.message };
       }

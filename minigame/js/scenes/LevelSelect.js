@@ -1,5 +1,6 @@
 import { BaseScene } from './BaseScene';
 import { getAllRealms, getRealmByStage, getStageIndexInRealm, getRealmTotalStages, getTotalStages } from '../data/LevelData';
+import { loadCompletedStages, getMaxCompletedStage } from '../data/ProgressStore.js';
 import { Theme } from '../theme.js';
 
 /**
@@ -18,74 +19,61 @@ export class LevelSelect extends BaseScene {
     super.onEnter(params);
     this.view = 'realms';
     this.selectedRealm = null;
-    this.completedStages = this.loadCompletedStages();
+    this.completedStages = loadCompletedStages();
     this.scrollY = 0;
   }
 
-  loadCompletedStages() {
-    try {
-      const data = wx.getStorageSync('completed_stages');
-      return data ? JSON.parse(data) : [];
-    } catch (e) {
-      return [];
-    }
+  _getMaxCompleted() {
+    return getMaxCompletedStage(this.completedStages);
   }
 
   render(ctx, w, h) {
-    // 仙气背景
-    const bg = ctx.createLinearGradient(0, 0, 0, h);
-    bg.addColorStop(0, '#E8F5E9');
-    bg.addColorStop(0.5, '#C8E6C9');
-    bg.addColorStop(1, '#A5D6A7');
-    ctx.fillStyle = bg;
-    ctx.fillRect(0, 0, w, h);
-
-    // 云雾装饰
-    this.drawCloudMist(ctx, w, h);
-
+    this.completedStages = loadCompletedStages();
+    this.drawPageBackground(ctx, w, h);
     this.buttons = [];
-    this.drawBackButton(ctx, 10, 10, () => {
+
+    const onBack = () => {
       if (this.view === 'stages') {
         this.view = 'realms';
         this.scrollY = 0;
       } else {
         this.manager.switchTo('mainMenu');
       }
-    });
+    };
 
     if (this.view === 'realms') {
-      this.renderRealms(ctx, w, h);
+      const totalCompleted = this.completedStages.length;
+      const totalStages = getTotalStages();
+      const { headerBottom } = this.drawPageHeader(ctx, w, '修炼境界', onBack, {
+        subTitle: `已通关 ${totalCompleted}/${totalStages} 关`,
+        subTitleColor: Theme.colors.text.cyan,
+      });
+      this.renderRealms(ctx, w, h, headerBottom);
     } else {
+      this.drawBackButton(ctx, 10, 10, onBack);
       this.renderStages(ctx, w, h);
     }
 
     this.renderButtons(ctx);
   }
 
-  renderRealms(ctx, w, h) {
-    // 修仙风格标题
-    this.drawTitle(ctx, '修炼境界', w / 2, 45, 22, Theme.colors.text.primary);
-
-    // 进度
+  renderRealms(ctx, w, h, headerBottom) {
+    const maxCompleted = this._getMaxCompleted();
     const totalCompleted = this.completedStages.length;
-    const totalStages = getTotalStages();
-    this.drawSubTitle(ctx, `已通关 ${totalCompleted}/${totalStages} 关`, w / 2, 65);
-
-    // 境界列表
     const realms = getAllRealms();
-    const startY = 80;
+    const startY = headerBottom + Theme.layout.gap.sm;
     const itemH = 65;
     const cardW = w - 30;
-    const maxScroll = Math.max(0, realms.length * (itemH + 10) - (h - 100));
+    const maxScroll = Math.max(0, realms.length * (itemH + 10) - (h - startY));
 
     this.maxScrollY = maxScroll;
 
     for (let i = 0; i < realms.length; i++) {
       const realm = realms[i];
       const y = startY + i * (itemH + 10) - this.scrollY;
-      if (y < 60 || y > h) continue;
+      if (y < startY - itemH || y > h) continue;
 
-      const isUnlocked = totalCompleted >= realm.startStage - 1;
+      const isUnlocked = maxCompleted >= realm.startStage - 1;
       const completedInRealm = this.completedStages.filter(
         s => s >= realm.startStage && s <= realm.endStage
       ).length;
@@ -94,38 +82,32 @@ export class LevelSelect extends BaseScene {
       ctx.save();
       if (!isUnlocked) ctx.globalAlpha = 0.4;
 
-      // 灵气卡片
-      this.drawCard(ctx, 15, y, cardW, itemH, {
-        border: isUnlocked ? realm.color : '#ddd',
-        glow: isUnlocked ? realm.color : null,
+      this.drawGlassPanel(ctx, 15, y, cardW, itemH, {
+        border: isUnlocked ? realm.color : Theme.colors.card.borderMuted,
+        accentColor: isUnlocked ? realm.color : null,
       });
 
-      // 图标
       ctx.font = '28px sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText(isUnlocked ? realm.icon : '🔒', 50, y + itemH / 2 + 5);
 
-      // 名称
-      ctx.font = `bold 16px ${Theme.fonts.primary}`;
-      ctx.fillStyle = isUnlocked ? Theme.colors.text.primary : Theme.colors.text.light;
+      ctx.font = `bold ${Theme.fonts.sizes.body}px ${Theme.fonts.primary}`;
+      ctx.fillStyle = isUnlocked ? Theme.colors.text.primary : Theme.colors.text.muted;
       ctx.textAlign = 'left';
       ctx.fillText(realm.name, 80, y + 25);
 
-      // 描述
-      ctx.font = `12px ${Theme.fonts.primary}`;
-      ctx.fillStyle = Theme.colors.text.muted;
-      ctx.fillText(realm.desc, 80, y + 45);
+      ctx.font = `${Theme.fonts.sizes.caption}px ${Theme.fonts.primary}`;
+      ctx.fillStyle = Theme.colors.text.secondary;
+      ctx.fillText(realm.desc, 80, y + 47);
 
-      // 进度
-      ctx.font = `12px ${Theme.fonts.primary}`;
+      ctx.font = `${Theme.fonts.sizes.caption}px ${Theme.fonts.primary}`;
       ctx.fillStyle = realm.color;
       ctx.textAlign = 'right';
       ctx.fillText(`${completedInRealm}/${totalInRealm}`, cardW + 5, y + 25);
 
-      // 灵气进度条
       const barW = 60;
       const barY = y + itemH - 18;
-      ctx.fillStyle = '#E8E8E8';
+      ctx.fillStyle = 'rgba(255,255,255,0.1)';
       this.roundRect(ctx, cardW - barW - 15, barY, barW, 6, 3);
       ctx.fill();
       if (completedInRealm > 0) {
@@ -153,104 +135,145 @@ export class LevelSelect extends BaseScene {
     const realm = this.selectedRealm;
     if (!realm) return;
 
-    // 修仙风格标题
-    this.drawTitle(ctx, `${realm.icon} ${realm.name}`, w / 2, 40, 18, realm.color);
-    this.drawSubTitle(ctx, realm.desc, w / 2, 60);
+    const back = Theme.layout.backBtn;
+    const panelY = back.y + back.h + Theme.layout.gap.lg;
 
-    // 藤蔓 + 关卡叶子
+    this.drawGlassPanel(ctx, 16, panelY, w - 32, 78, {
+      border: realm.color,
+      accentColor: realm.color,
+    });
+    ctx.font = '34px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(realm.icon, 32, panelY + 46);
+    ctx.font = `bold ${Theme.fonts.sizes.header}px ${Theme.fonts.primary}`;
+    ctx.fillStyle = Theme.colors.text.gold;
+    ctx.fillText(realm.name, 72, panelY + 36);
+    ctx.font = `${Theme.fonts.sizes.caption}px ${Theme.fonts.primary}`;
+    ctx.fillStyle = Theme.colors.text.secondary;
+    ctx.fillText(realm.desc, 72, panelY + 60);
+    ctx.font = `${Theme.fonts.sizes.caption}px ${Theme.fonts.primary}`;
+    ctx.fillStyle = Theme.colors.text.cyan;
+    ctx.textAlign = 'right';
+    ctx.fillText('🌿 点击灵叶开始', w - 28, panelY + 46);
+
     const totalStages = realm.endStage - realm.startStage + 1;
-    const cols = 4;
-    const cellSize = Math.min(65, (w - 50) / cols);
-    const gap = 12;
-    const startX = (w - cols * (cellSize + gap) + gap) / 2;
-    const startY = 80;
+    const nodeSize = Math.min(72, (w - 48) / 4);
+    const gap = 16;
+    const cols = totalStages <= 4 ? totalStages : 4;
     const rows = Math.ceil(totalStages / cols);
-    const maxScroll = Math.max(0, rows * (cellSize + gap) - (h - 120));
-
+    const startY = panelY + 88 + Theme.layout.gap.md;
+    const maxScroll = Math.max(0, rows * (nodeSize + gap + 8) - (h - startY - 30));
     this.maxScrollY = maxScroll;
 
-    // 灵藤主线
+    // 背景柔光（不要竖线藤蔓）
     ctx.save();
-    const vineGrad = ctx.createLinearGradient(0, startY - this.scrollY, 0, startY + rows * (cellSize + gap) - this.scrollY);
-    vineGrad.addColorStop(0, '#8BC34A');
-    vineGrad.addColorStop(0.5, '#66BB6A');
-    vineGrad.addColorStop(1, '#4CAF50');
-    ctx.strokeStyle = vineGrad;
-    ctx.lineWidth = 4;
-    ctx.lineCap = 'round';
-    ctx.beginPath();
-    const vineX = startX + cellSize / 2;
-    ctx.moveTo(vineX, startY - this.scrollY);
-    ctx.lineTo(vineX, startY + rows * (cellSize + gap) - this.scrollY);
-    ctx.stroke();
+    ctx.globalAlpha = 0.12;
+    const glow = ctx.createRadialGradient(w / 2, startY + rows * nodeSize * 0.4, 0, w / 2, startY + rows * nodeSize * 0.4, w * 0.45);
+    glow.addColorStop(0, realm.color);
+    glow.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, startY - 20, w, h);
     ctx.restore();
+
+    const maxCompleted = this._getMaxCompleted();
 
     for (let i = 0; i < totalStages; i++) {
       const stageNum = realm.startStage + i;
       const col = i % cols;
       const row = Math.floor(i / cols);
-      const x = startX + col * (cellSize + gap);
-      const y = startY + row * (cellSize + gap) - this.scrollY;
+      const itemsInRow = Math.min(cols, totalStages - row * cols);
+      const rowW = itemsInRow * nodeSize + (itemsInRow - 1) * gap;
+      const rowStartX = (w - rowW) / 2;
+      const x = rowStartX + col * (nodeSize + gap);
+      const y = startY + row * (nodeSize + gap + 8) - this.scrollY;
 
-      if (y < 60 || y > h) continue;
+      if (y + nodeSize < 50 || y > h + 20) continue;
 
       const isCompleted = this.completedStages.includes(stageNum);
-      const isCurrent = !isCompleted && stageNum <= this.completedStages.length + 1;
-      const isLocked = !isCompleted && !isCurrent;
+      const isCurrent = !isCompleted && stageNum === maxCompleted + 1;
+      const isLocked = !isCompleted && stageNum > maxCompleted + 1;
 
-      // 叶子/果实
-      ctx.save();
-      if (isLocked) ctx.globalAlpha = 0.3;
+      this.drawLeafNode(ctx, x, y, nodeSize, {
+        index: i + 1,
+        isCompleted,
+        isCurrent,
+        isLocked,
+        realmColor: realm.color,
+      });
 
-      // 形状
-      const cx = x + cellSize / 2;
-      const cy = y + cellSize / 2;
-
-      if (isCompleted) {
-        // 金色灵果 - 已完成
-        ctx.fillStyle = '#FFD700';
-        ctx.shadowColor = '#FFD700';
-        ctx.shadowBlur = 6;
-        ctx.beginPath();
-        ctx.ellipse(cx, cy, cellSize * 0.4, cellSize * 0.3, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = '#FFA000';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-      } else if (isCurrent) {
-        // 绿色灵果 - 当前关卡
-        ctx.fillStyle = realm.color;
-        ctx.shadowColor = realm.color;
-        ctx.shadowBlur = 8;
-        ctx.beginPath();
-        ctx.ellipse(cx, cy, cellSize * 0.4, cellSize * 0.3, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = '#FFFFFF';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-      } else {
-        // 灰色灵果 - 未解锁
-        ctx.fillStyle = '#E0E0E0';
-        ctx.beginPath();
-        ctx.ellipse(cx, cy, cellSize * 0.4, cellSize * 0.3, 0, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      // 关卡号
-      ctx.font = `bold ${cellSize * 0.25}px ${Theme.fonts.primary}`;
-      ctx.fillStyle = isCompleted ? '#FFFFFF' : (isCurrent ? '#FFFFFF' : '#999999');
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(`${i + 1}`, cx, cy);
-
-      ctx.restore();
-
-      // 点击进入
       if (!isLocked) {
-        this.addButton(x, y, cellSize, cellSize, '', 'transparent', () => {
+        this.addButton(x, y, nodeSize, nodeSize, '', 'transparent', () => {
           this.manager.switchTo('game', { stage: stageNum });
         });
       }
     }
+  }
+
+  /** 灵叶关卡节点 — 对齐 Web 原型 .leaf-node */
+  drawLeafNode(ctx, x, y, size, opts) {
+    const cx = x + size / 2;
+    const cy = y + size / 2;
+    const r = size / 2 - 2;
+
+    ctx.save();
+    if (opts.isLocked) ctx.globalAlpha = 0.38;
+
+    // 当前关外圈光晕
+    if (opts.isCurrent) {
+      ctx.globalAlpha = 1;
+      ctx.shadowColor = opts.realmColor || Theme.colors.button.primary;
+      ctx.shadowBlur = 18;
+      ctx.strokeStyle = opts.realmColor || Theme.colors.button.primary;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r + 3, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
+
+    // 节点底：紫玻璃 + 可见填充
+    const bg = ctx.createRadialGradient(cx, cy - r * 0.2, r * 0.1, cx, cy, r);
+    bg.addColorStop(0, 'rgba(90,58,158,0.95)');
+    bg.addColorStop(1, 'rgba(42,24,88,0.92)');
+    ctx.fillStyle = bg;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 边框
+    ctx.lineWidth = 2.5;
+    if (opts.isCompleted) {
+      ctx.strokeStyle = Theme.colors.accent.gold;
+      ctx.shadowColor = Theme.colors.accent.gold;
+      ctx.shadowBlur = 10;
+    } else if (opts.isCurrent) {
+      ctx.strokeStyle = opts.realmColor || '#6bcb77';
+    } else if (opts.isLocked) {
+      ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+    } else {
+      ctx.strokeStyle = 'rgba(107,203,119,0.65)';
+    }
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // 叶子 + 关卡号
+    ctx.font = `${size * 0.34}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('🍃', cx, cy - size * 0.14);
+
+    ctx.font = `bold ${size * 0.26}px ${Theme.fonts.primary}`;
+    ctx.fillStyle = opts.isCompleted ? Theme.colors.accent.gold : Theme.colors.text.primary;
+    ctx.fillText(`${opts.index}`, cx, cy + size * 0.16);
+
+    if (opts.isCompleted) {
+      ctx.font = `${size * 0.22}px sans-serif`;
+      ctx.fillText('⭐', cx + r * 0.55, cy - r * 0.55);
+    }
+
+    ctx.restore();
   }
 }
