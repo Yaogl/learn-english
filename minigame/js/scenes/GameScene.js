@@ -3,7 +3,7 @@ import { getStageData, getRealmByStage } from '../data/LevelData';
 
 /**
  * 闯关模式 - 核心玩法
- * 流程：故事字幕 → 记忆单词 → 隐藏单词 → 字母平铺消除
+ * 流程：故事字幕 → 记忆单词（音标+例句+30秒） → 字母平铺消除
  */
 export class GameScene extends BaseScene {
   constructor() {
@@ -19,10 +19,11 @@ export class GameScene extends BaseScene {
     // 记忆阶段
     this.memoryTimer = 0;
     this.memoryWords = [];
+    this.memoryIndex = 0; // 当前显示第几个单词
 
     // 游戏阶段
-    this.letters = [];       // 平铺的字母
-    this.slots = [];         // 槽位
+    this.letters = [];
+    this.slots = [];
     this.maxSlots = 7;
     this.matchedWords = new Set();
     this.targetStrings = [];
@@ -56,8 +57,9 @@ export class GameScene extends BaseScene {
     this.storyAlpha = 0;
 
     // 记忆阶段
-    this.memoryTimer = 4;
+    this.memoryTimer = 30;
     this.memoryWords = this.stageData.words;
+    this.memoryIndex = 0;
 
     // 游戏阶段
     this.letters = [];
@@ -82,16 +84,15 @@ export class GameScene extends BaseScene {
 
     if (this.state === 'story') {
       this.storyAlpha = Math.min(1, this.animTime * 2);
-      this.storyScrollY += dt * 60;
-      // 故事滚动3秒后自动进入记忆阶段
-      if (this.animTime > 3) {
+      this.storyScrollY += dt * 40;
+      if (this.animTime > 4) {
         this.state = 'memory';
         this.animTime = 0;
       }
     }
 
     if (this.state === 'memory') {
-      this.memoryTimer = Math.max(0, 4 - this.animTime);
+      this.memoryTimer = Math.max(0, 30 - this.animTime);
       if (this.memoryTimer <= 0) {
         this.state = 'playing';
         this.animTime = 0;
@@ -117,13 +118,11 @@ export class GameScene extends BaseScene {
       this.checkSlotMatch();
     }
 
-    // 消除动画
     this.clearAnimations = this.clearAnimations.filter(a => {
       a.progress += dt * 3;
       return a.progress < 1;
     });
 
-    // Combo文字
     if (this.comboTextAnim) {
       this.comboTextAnim.progress += dt * 2.5;
       if (this.comboTextAnim.progress >= 1) this.comboTextAnim = null;
@@ -131,7 +130,6 @@ export class GameScene extends BaseScene {
 
     if (this.shakeTimer > 0) this.shakeTimer -= dt;
 
-    // 粒子
     this.particles = this.particles.filter(p => {
       p.x += p.vx;
       p.y += p.vy;
@@ -140,12 +138,10 @@ export class GameScene extends BaseScene {
       return p.life > 0;
     });
 
-    // 胜利动画
     if (this.state === 'win') {
       this.winAnim += dt;
     }
 
-    // 检查通关
     if (this.state === 'playing' && this.matchedWords.size === this.targetStrings.length) {
       this.state = 'win';
       this.winAnim = 0;
@@ -159,28 +155,24 @@ export class GameScene extends BaseScene {
   generateLetters() {
     const allLetters = [];
 
-    // 收集所有单词的字母
     for (const word of this.targetStrings) {
       for (const char of word) {
-        allLetters.push({ text: char, groupSize: 1, fromWord: word });
+        allLetters.push({ text: char, groupSize: 1 });
       }
     }
 
-    // 添加干扰字母
     const extraCount = this.stageData.extraLetters;
     const pool = 'abcdefghijklmnopqrstuvwxyz';
     for (let i = 0; i < extraCount; i++) {
       const idx = (this.stage * 3 + i * 7) % pool.length;
-      allLetters.push({ text: pool[idx], groupSize: 1, fromWord: null });
+      allLetters.push({ text: pool[idx], groupSize: 1 });
     }
 
-    // 打乱
     for (let i = allLetters.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [allLetters[i], allLetters[j]] = [allLetters[j], allLetters[i]];
     }
 
-    // 创建字母对象
     this.letters = allLetters.map((item, i) => ({
       id: i,
       text: item.text,
@@ -190,7 +182,6 @@ export class GameScene extends BaseScene {
   }
 
   render(ctx, w, h) {
-    // 背景
     const bg = ctx.createLinearGradient(0, 0, 0, h);
     bg.addColorStop(0, '#E8F5E9');
     bg.addColorStop(1, '#C8E6C9');
@@ -216,7 +207,6 @@ export class GameScene extends BaseScene {
       ctx.restore();
     }
 
-    // Combo文字
     if (this.comboTextAnim) {
       const a = this.comboTextAnim;
       const scale = 1 + a.progress * 1.2;
@@ -231,7 +221,6 @@ export class GameScene extends BaseScene {
       ctx.restore();
     }
 
-    // 结果覆盖
     if (this.state === 'win' || this.state === 'lose') {
       this.renderResult(ctx, w, h);
     }
@@ -244,36 +233,32 @@ export class GameScene extends BaseScene {
     ctx.save();
     ctx.globalAlpha = this.storyAlpha;
 
-    // 境界信息
     const realm = this.stageData.realm;
     ctx.font = 'bold 16px "Microsoft YaHei", sans-serif';
     ctx.fillStyle = realm.color;
     ctx.textAlign = 'center';
     ctx.fillText(`${realm.icon} ${realm.name} · 第${this.stage}关`, w / 2, 60);
 
-    // 故事文字（滚动）
     const story = this.stageData.story;
     ctx.font = '18px "Microsoft YaHei", sans-serif';
     ctx.fillStyle = '#333';
     ctx.textAlign = 'center';
 
-    // 自动换行
-    const lines = this.wrapTextLines(ctx, story, w * 0.8);
-    const lineHeight = 30;
-    const totalHeight = lines.length * lineHeight;
-    const startY = h * 0.4 - this.storyScrollY;
+    const lines = this.wrapTextLines(ctx, story, w * 0.85);
+    const lineHeight = 32;
+    const startY = h * 0.35 - this.storyScrollY;
 
     for (let i = 0; i < lines.length; i++) {
       const y = startY + i * lineHeight;
       if (y > -30 && y < h + 30) {
-        ctx.globalAlpha = this.storyAlpha * Math.min(1, Math.max(0, (y - 50) / 50));
+        const alpha = Math.min(1, Math.max(0, (y - 80) / 60));
+        ctx.globalAlpha = this.storyAlpha * alpha;
         ctx.fillText(lines[i], w / 2, y);
       }
     }
 
     ctx.restore();
 
-    // 提示文字
     ctx.font = '14px "Microsoft YaHei", sans-serif';
     ctx.fillStyle = '#999';
     ctx.textAlign = 'center';
@@ -281,7 +266,7 @@ export class GameScene extends BaseScene {
   }
 
   /**
-   * 记忆单词阶段
+   * 记忆单词阶段 - 增强版
    */
   renderMemory(ctx, w, h) {
     // 境界信息
@@ -289,22 +274,41 @@ export class GameScene extends BaseScene {
     ctx.font = 'bold 14px "Microsoft YaHei", sans-serif';
     ctx.fillStyle = realm.color;
     ctx.textAlign = 'center';
-    ctx.fillText(`${realm.icon} ${realm.name} · 第${this.stage}关`, w / 2, 40);
+    ctx.fillText(`${realm.icon} ${realm.name} · 第${this.stage}关`, w / 2, 35);
 
     // 标题
-    ctx.font = 'bold 20px "Microsoft YaHei", sans-serif';
+    ctx.font = 'bold 18px "Microsoft YaHei", sans-serif';
     ctx.fillStyle = '#333';
-    ctx.fillText('记住这些单词！', w / 2, 75);
+    ctx.fillText('记住这些单词！', w / 2, 60);
 
-    // 单词卡片
-    const cardW = w * 0.85;
-    const cardH = 80;
-    const startX = (w - cardW) / 2;
-    const startY = 100;
+    // 倒计时
+    const timerColor = this.memoryTimer <= 5 ? '#FF6B6B' : '#4CAF50';
+    ctx.font = 'bold 24px "Microsoft YaHei", sans-serif';
+    ctx.fillStyle = timerColor;
+    ctx.textAlign = 'right';
+    ctx.fillText(`${Math.ceil(this.memoryTimer)}s`, w - 20, 35);
+
+    // 进度条
+    const barW = w - 40;
+    const barY = 72;
+    ctx.fillStyle = '#E0E0E0';
+    this.roundRect(ctx, 20, barY, barW, 6, 3);
+    ctx.fill();
+    ctx.fillStyle = timerColor;
+    this.roundRect(ctx, 20, barY, barW * (this.memoryTimer / 30), 6, 3);
+    ctx.fill();
+
+    // 单词卡片 - 铺满屏幕
+    const cardW = w - 40;
+    const cardH = 100;
+    const startX = 20;
+    const startY = 90;
+    const gap = 10;
 
     for (let i = 0; i < this.memoryWords.length; i++) {
       const tw = this.memoryWords[i];
-      const y = startY + i * (cardH + 12);
+      const y = startY + i * (cardH + gap);
+      if (y > h - 80) break;
 
       this.drawCard(ctx, startX, y, cardW, cardH, { border: '#4CAF50' });
 
@@ -312,44 +316,56 @@ export class GameScene extends BaseScene {
       ctx.font = 'bold 28px "Microsoft YaHei", sans-serif';
       ctx.fillStyle = '#333';
       ctx.textAlign = 'center';
-      ctx.fillText(tw.word, w / 2, y + 32);
+      ctx.fillText(tw.word, w / 2, y + 28);
 
-      // 中文释义
-      ctx.font = '16px "Microsoft YaHei", sans-serif';
+      // 音标
+      ctx.font = '14px sans-serif';
+      ctx.fillStyle = '#999';
+      ctx.fillText(tw.phonetic || '', w / 2, y + 48);
+
+      // 中文 + 过去式
+      let detail = tw.meaning;
+      if (tw.past) {
+        detail += `  |  过去式: ${tw.past}`;
+      }
+      ctx.font = '14px "Microsoft YaHei", sans-serif';
       ctx.fillStyle = '#666';
-      ctx.fillText(tw.meaning, w / 2, y + 58);
+      ctx.fillText(detail, w / 2, y + 68);
+
+      // 例句
+      if (tw.example) {
+        ctx.font = '12px "Microsoft YaHei", sans-serif';
+        ctx.fillStyle = '#4CAF50';
+        ctx.fillText(tw.example, w / 2, y + 88);
+      }
     }
 
-    // 倒计时
-    const timerY = startY + this.memoryWords.length * (cardH + 12) + 20;
-    ctx.font = 'bold 28px "Microsoft YaHei", sans-serif';
-    ctx.fillStyle = this.memoryTimer <= 1.5 ? '#FF6B6B' : '#4CAF50';
-    ctx.textAlign = 'center';
-    ctx.fillText(`${Math.ceil(this.memoryTimer)}`, w / 2, timerY);
-
-    ctx.font = '14px "Microsoft YaHei", sans-serif';
-    ctx.fillStyle = '#999';
-    ctx.fillText('秒后开始', w / 2, timerY + 22);
+    // 底部按钮
+    this.buttons = [];
+    this.addButton(w / 2 - 60, h - 65, 120, 40, '开始挑战', '#4CAF50', () => {
+      this.state = 'playing';
+      this.animTime = 0;
+      this.generateLetters();
+    });
+    this.renderButtons(ctx);
   }
 
   /**
    * 游戏阶段
    */
   renderGame(ctx, w, h) {
-    // 抖动效果
     ctx.save();
     if (this.shakeTimer > 0) {
       const intensity = this.shakeTimer * 8;
       ctx.translate((Math.random() - 0.5) * intensity, (Math.random() - 0.5) * intensity);
     }
 
-    // 顶部：进度
+    // 顶部进度
     ctx.font = '13px "Microsoft YaHei", sans-serif';
     ctx.textAlign = 'center';
     ctx.fillStyle = '#999';
     ctx.fillText(`第${this.stage}关 · ${this.matchedWords.size}/${this.targetStrings.length}`, w / 2, 25);
 
-    // 境界标签
     const realm = this.stageData.realm;
     ctx.font = '12px "Microsoft YaHei", sans-serif';
     ctx.fillStyle = realm.color;
@@ -363,7 +379,6 @@ export class GameScene extends BaseScene {
 
     ctx.restore();
 
-    // 按钮
     this.buttons = [];
     this.addButton(10, 10, 60, 30, '← 返回', 'rgba(0,0,0,0.3)', () => {
       this.manager.switchTo('levels');
@@ -371,9 +386,6 @@ export class GameScene extends BaseScene {
     this.renderButtons(ctx);
   }
 
-  /**
-   * 渲染平铺字母
-   */
   renderLetters(ctx, w, h) {
     const cols = Math.min(6, Math.ceil(Math.sqrt(this.letters.length * 1.5)));
     const letterSize = Math.min(55, (w - 40 - (cols - 1) * 8) / cols);
@@ -396,7 +408,6 @@ export class GameScene extends BaseScene {
       const x = startX + col * (letterSize + gap);
       const y = startY + row * (letterSize + gap);
 
-      // 字母背景
       ctx.save();
       const grad = ctx.createLinearGradient(x, y, x, y + letterSize);
       grad.addColorStop(0, '#fff');
@@ -404,13 +415,10 @@ export class GameScene extends BaseScene {
       ctx.fillStyle = grad;
       this.roundRect(ctx, x, y, letterSize, letterSize, 10);
       ctx.fill();
-
       ctx.strokeStyle = '#4CAF50';
       ctx.lineWidth = 2;
       this.roundRect(ctx, x, y, letterSize, letterSize, 10);
       ctx.stroke();
-
-      // 字母文字
       ctx.font = `bold ${letterSize * 0.5}px "Microsoft YaHei", sans-serif`;
       ctx.fillStyle = '#333';
       ctx.textAlign = 'center';
@@ -419,7 +427,6 @@ export class GameScene extends BaseScene {
       ctx.restore();
     }
 
-    // 飞行动画
     for (const a of this.flyAnimations) {
       ctx.save();
       ctx.globalAlpha = 1 - a.progress * 0.3;
@@ -440,12 +447,9 @@ export class GameScene extends BaseScene {
     }
   }
 
-  /**
-   * 渲染槽位
-   */
   renderSlots(ctx, w, h) {
-    const slotSize = Math.min(50, (w - 30) / this.maxSlots);
-    const slotGap = 6;
+    const slotSize = Math.min(48, (w - 30) / this.maxSlots);
+    const slotGap = 5;
     const slotsW = this.maxSlots * (slotSize + slotGap) - slotGap;
     const slotsX = (w - slotsW) / 2;
     const slotsY = h * 0.72;
@@ -454,7 +458,6 @@ export class GameScene extends BaseScene {
     this._slotsY = slotsY;
     this._slotSize = slotSize;
 
-    // 背景
     ctx.fillStyle = 'rgba(0,0,0,0.05)';
     this.roundRect(ctx, slotsX - 8, slotsY - 8, slotsW + 16, slotSize + 16, 12);
     ctx.fill();
@@ -468,8 +471,7 @@ export class GameScene extends BaseScene {
         ctx.fillStyle = '#4CAF50';
         this.roundRect(ctx, x, y, slotSize, slotSize, 8);
         ctx.fill();
-        const fs = tile.groupSize === 2 ? slotSize * 0.32 : slotSize * 0.4;
-        ctx.font = `bold ${fs}px "Microsoft YaHei", sans-serif`;
+        ctx.font = `bold ${slotSize * 0.45}px "Microsoft YaHei", sans-serif`;
         ctx.fillStyle = '#fff';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
@@ -487,7 +489,6 @@ export class GameScene extends BaseScene {
       }
     }
 
-    // 消除动画
     for (const a of this.clearAnimations) {
       ctx.save();
       ctx.globalAlpha = 1 - a.progress;
@@ -499,9 +500,6 @@ export class GameScene extends BaseScene {
     }
   }
 
-  /**
-   * 渲染结果
-   */
   renderResult(ctx, w, h) {
     ctx.fillStyle = 'rgba(0,0,0,0.4)';
     ctx.fillRect(0, 0, w, h);
@@ -555,7 +553,6 @@ export class GameScene extends BaseScene {
 
   onTouchEnd(x, y) {
     if (this.state === 'story') {
-      // 点击跳过故事
       this.state = 'memory';
       this.animTime = 0;
       return;
@@ -566,7 +563,6 @@ export class GameScene extends BaseScene {
       return;
     }
 
-    // 检查点击字母
     const visibleLetters = this.letters.filter(l => l.visible);
     const letterSize = this._letterSize;
     const gap = this._letterGap;
@@ -603,7 +599,7 @@ export class GameScene extends BaseScene {
       groupSize: letter.groupSize,
       fromX: lx,
       fromY: ly,
-      toX: this._slotsX + slotIndex * (slotSize + 6),
+      toX: this._slotsX + slotIndex * (slotSize + 5),
       toY: this._slotsY,
       x: lx,
       y: ly,
@@ -619,7 +615,6 @@ export class GameScene extends BaseScene {
     for (const word of this.targetStrings) {
       if (this.matchedWords.has(word)) continue;
 
-      // 检查槽位中是否包含该单词的所有字母
       const wordChars = word.split('');
       const slotChars = [...slotTexts];
       let allFound = true;
@@ -637,7 +632,6 @@ export class GameScene extends BaseScene {
         this.matchedWords.add(word);
         this.comboTextAnim = { text: word + '!', progress: 0 };
 
-        // 从槽位中移除这些字母
         const toRemove = word.split('');
         this.slots = this.slots.filter(s => {
           const idx = toRemove.indexOf(s.text);
@@ -648,10 +642,9 @@ export class GameScene extends BaseScene {
           return true;
         });
 
-        // 消除动画
         for (let i = 0; i < this.maxSlots; i++) {
           this.clearAnimations.push({
-            x: this._slotsX + i * (this._slotSize + 6),
+            x: this._slotsX + i * (this._slotSize + 5),
             y: this._slotsY,
             progress: 0,
           });
@@ -662,7 +655,6 @@ export class GameScene extends BaseScene {
       }
     }
 
-    // 检查是否槽位满了
     if (this.slots.length >= this.maxSlots) {
       this.state = 'lose';
       this.shakeTimer = 0.5;
@@ -671,7 +663,7 @@ export class GameScene extends BaseScene {
 
   spawnMatchParticles() {
     const colors = ['#4CAF50', '#FFD700', '#4A90D9', '#FF6B6B', '#9C27B0'];
-    const cx = this._slotsX + (this.maxSlots * (this._slotSize + 6)) / 2;
+    const cx = this._slotsX + (this.maxSlots * (this._slotSize + 5)) / 2;
     const cy = this._slotsY + this._slotSize / 2;
     for (let i = 0; i < 25; i++) {
       const angle = (Math.PI * 2 * i) / 25;
@@ -697,8 +689,6 @@ export class GameScene extends BaseScene {
       }
     } catch (e) {}
   }
-
-  // ==================== 工具 ====================
 
   wrapTextLines(ctx, text, maxWidth) {
     const chars = text.split('');
