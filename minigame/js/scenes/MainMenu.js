@@ -73,15 +73,18 @@ export class MainMenu extends BaseScene {
     ctx.save();
     ctx.globalAlpha = this.cardAlpha;
 
-    const entryY = h * 0.62;
-    const entryH = h * 0.36;
+    const entryY = h * 0.6;
+    const entryH = h * 0.38;
 
-    // icon-bg.png 作为底部背景
-    if (this.iconBgImage) {
-      // 拉伸填充底部区域
-      ctx.drawImage(this.iconBgImage, 0, entryY, w, entryH);
+    // icon-bg.png 作为底部背景（居中绘制）
+    if (this.iconBgImage && this.iconBgImage.width > 0) {
+      // 保持比例居中绘制
+      const imgRatio = this.iconBgImage.width / this.iconBgImage.height;
+      const drawH = entryH;
+      const drawW = drawH * imgRatio;
+      const drawX = (w - drawW) / 2;
+      ctx.drawImage(this.iconBgImage, drawX, entryY, drawW, drawH);
     } else {
-      // fallback
       ctx.fillStyle = 'rgba(255,255,255,0.25)';
       this.roundRect(ctx, 12, entryY, w - 24, entryH, 20);
       ctx.fill();
@@ -103,7 +106,7 @@ export class MainMenu extends BaseScene {
     const rows = 2;
     const btnW = w / cols;
     const btnH = entryH / rows;
-    const iconSize = Math.min(btnW * 0.6, btnH * 0.5);
+    const iconSize = Math.min(btnW * 0.7, btnH * 0.55);
 
     this.buttons = [];
 
@@ -115,7 +118,7 @@ export class MainMenu extends BaseScene {
       const cy = entryY + row * btnH + btnH / 2;
 
       // 从精灵图裁切图标
-      if (this.iconsImage) {
+      if (this.iconsImage && this.iconsImage.width > 0) {
         const iconCols = 4;
         const iconRows = 2;
         const srcX = (i % iconCols) * (this.iconsImage.width / iconCols);
@@ -129,7 +132,6 @@ export class MainMenu extends BaseScene {
           cx - iconSize / 2, cy - iconSize / 2, iconSize, iconSize
         );
       } else {
-        // fallback
         ctx.fillStyle = '#4CAF50';
         ctx.beginPath();
         ctx.arc(cx, cy, iconSize / 2, 0, Math.PI * 2);
@@ -141,7 +143,6 @@ export class MainMenu extends BaseScene {
         ctx.fillText(item.label, cx, cy);
       }
 
-      // 点击区域
       this.addButton(
         col * btnW, entryY + row * btnH,
         btnW, btnH,
