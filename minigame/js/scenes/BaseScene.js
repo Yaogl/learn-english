@@ -14,6 +14,8 @@ export class BaseScene {
     this.animTime = 0;
     this.pressedButton = null;
     this.pressedTime = 0;
+    this.petals = [];
+    this._petalInit = false;
   }
 
   onEnter(params) {
@@ -46,8 +48,8 @@ export class BaseScene {
       const by = btn.y - this.scrollY;
       const isPressed = btn === this.pressedButton;
       const pressScale = isPressed ? Theme.animation.button.pressScale : 1;
-      const isGold = btn.color === Theme.colors.button.gold || btn.color === '#ffd700';
-      const isGlass = !isGold && (btn.color === Theme.colors.button.muted || (btn.color && String(btn.color).startsWith('rgba')));
+      const isGreen = btn.color === Theme.colors.button.primary || btn.color === '#059669';
+      const isGlass = !isGreen && (btn.color === Theme.colors.button.muted || (btn.color && String(btn.color).startsWith('rgba')));
 
       ctx.save();
       ctx.globalAlpha = isPressed ? Theme.animation.button.pressAlpha : 1;
@@ -62,19 +64,19 @@ export class BaseScene {
 
       const r = Math.min(btn.h * 0.35, 16);
       if (isGlass) {
-        ctx.fillStyle = Theme.colors.button.muted;
+        // 白色毛玻璃按钮
+        ctx.fillStyle = 'rgba(255,255,255,0.60)';
         this.roundRect(ctx, btn.x, by, btn.w, btn.h, r);
         ctx.fill();
-        ctx.strokeStyle = Theme.colors.card.borderMuted;
+        ctx.strokeStyle = Theme.colors.card.border;
         ctx.lineWidth = 1;
         this.roundRect(ctx, btn.x, by, btn.w, btn.h, r);
         ctx.stroke();
       } else {
         const grad = ctx.createLinearGradient(btn.x, by, btn.x + btn.w, by + btn.h);
-        if (isGold) {
-          grad.addColorStop(0, '#ffd700');
-          grad.addColorStop(0.5, '#ff9500');
-          grad.addColorStop(1, '#ffd700');
+        if (isGreen) {
+          grad.addColorStop(0, '#34d399');
+          grad.addColorStop(1, '#059669');
           applyShadow(ctx, Theme.shadows.glow);
         } else {
           grad.addColorStop(0, this.lightenColor(btn.color, 15));
@@ -92,7 +94,7 @@ export class BaseScene {
       ctx.font = `bold ${Math.min(btn.h * 0.4, 18)}px ${Theme.fonts.primary}`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillStyle = isGold ? Theme.colors.text.dark : Theme.colors.text.primary;
+      ctx.fillStyle = isGreen ? Theme.colors.text.white : Theme.colors.text.primary;
       ctx.fillText(btn.label, btn.x + btn.w / 2, by + btn.h / 2);
       ctx.restore();
     }
@@ -109,9 +111,9 @@ export class BaseScene {
     return `#${(1 << 24 | R << 16 | G << 8 | B).toString(16).slice(1)}`;
   }
 
-  /** 原型深紫渐变背景 + 星点 + 仙气 */
+  /** 暖米色渐变背景 + 花瓣飘落 + 绿雾 + 灵气粒子 */
   drawPageBackground(ctx, w, h) {
-    const g = ctx.createLinearGradient(0, 0, w * 0.3, h);
+    const g = ctx.createLinearGradient(0, 0, 0, h);
     const bg = Theme.colors.background.gradient;
     g.addColorStop(0, bg[0]);
     g.addColorStop(0.5, bg[1]);
@@ -119,7 +121,7 @@ export class BaseScene {
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, w, h);
 
-    this.drawStarField(ctx, w, h);
+    this.drawFallingPetals(ctx, w, h);
     this.drawCloudMist(ctx, w, h);
     this.drawSpiritParticles(ctx, w, h);
   }
@@ -128,19 +130,41 @@ export class BaseScene {
     this.drawPageBackground(ctx, w, h);
   }
 
-  drawStarField(ctx, w, h) {
+  drawFallingPetals(ctx, w, h) {
     const t = this.animTime || 0;
+    if (!this._petalInit) {
+      this._petalInit = true;
+      this.petals = [];
+      for (let i = 0; i < 14; i++) {
+        this.petals.push({
+          x: Math.random() * w,
+          size: 4 + Math.random() * 6,
+          speed: 30 + Math.random() * 40,
+          delay: Math.random() * 8,
+          drift: (Math.random() - 0.5) * 60,
+          rot: Math.random() * Math.PI * 2,
+          rotSpeed: (Math.random() - 0.5) * 2,
+          color: Theme.colors.petal[i % Theme.colors.petal.length],
+        });
+      }
+    }
+
     ctx.save();
-    for (let i = 0; i < 28; i++) {
-      const x = (w * ((i * 47 + 13) % 100)) / 100;
-      const y = (h * ((i * 31 + 7) % 100)) / 100;
-      const alpha = 0.25 + Math.sin(t * 0.8 + i * 1.1) * 0.2;
-      const r = 0.6 + (i % 3) * 0.5;
+    for (const p of this.petals) {
+      const elapsed = (t + p.delay) % 12;
+      if (elapsed < 0) continue;
+      const py = (elapsed * p.speed) % (h + 40) - 20;
+      const px = p.x + Math.sin(t * 0.5 + p.delay) * p.drift;
+      const alpha = 0.35 + Math.sin(t * 0.8 + p.delay) * 0.15;
       ctx.globalAlpha = alpha;
-      ctx.fillStyle = Theme.cultivation.star;
+      ctx.fillStyle = p.color;
+      ctx.save();
+      ctx.translate(px, py);
+      ctx.rotate(p.rot + t * p.rotSpeed);
       ctx.beginPath();
-      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.ellipse(0, 0, p.size, p.size * 1.5, 0, 0, Math.PI * 2);
       ctx.fill();
+      ctx.restore();
     }
     ctx.restore();
   }
@@ -157,7 +181,7 @@ export class BaseScene {
         const r = 28 + i * 6;
         const g = ctx.createRadialGradient(x, y + wave, 0, x, y + wave, r);
         g.addColorStop(0, Theme.cultivation.mist);
-        g.addColorStop(1, 'rgba(180,130,255,0)');
+        g.addColorStop(1, 'rgba(167,243,176,0)');
         ctx.fillStyle = g;
         ctx.beginPath();
         ctx.arc(x, y + wave, r, 0, Math.PI * 2);
@@ -367,7 +391,7 @@ export class BaseScene {
   drawSparkle(ctx, x, y, size, alpha) {
     ctx.save();
     ctx.globalAlpha = alpha;
-    ctx.fillStyle = '#FFD700';
+    ctx.fillStyle = Theme.colors.accent.green;
     ctx.beginPath();
     ctx.arc(x, y, size, 0, Math.PI * 2);
     ctx.fill();
@@ -392,18 +416,28 @@ export class BaseScene {
   drawGlassPanel(ctx, x, y, w, h, opts = {}) {
     const r = opts.radius || Theme.borderRadius.lg;
     ctx.save();
-    applyShadow(ctx, Theme.shadows.md);
+    applyShadow(ctx, Theme.shadows.card);
+    // 白色毛玻璃渐变
     const grad = ctx.createLinearGradient(x, y, x, y + h);
-    grad.addColorStop(0, opts.bgTop || Theme.colors.card.bgTop);
-    grad.addColorStop(1, opts.bgBottom || Theme.colors.card.bgBottom);
+    grad.addColorStop(0, opts.bgTop || 'rgba(255,255,255,0.75)');
+    grad.addColorStop(1, opts.bgBottom || 'rgba(255,255,255,0.55)');
     ctx.fillStyle = grad;
     this.roundRect(ctx, x, y, w, h, r);
     ctx.fill();
     clearShadow(ctx);
+    // 翡翠绿细边框
     ctx.strokeStyle = opts.border || Theme.colors.card.border;
     ctx.lineWidth = 1.5;
     this.roundRect(ctx, x, y, w, h, r);
     ctx.stroke();
+    // 玉石化内阴影
+    ctx.save();
+    ctx.clip();
+    ctx.strokeStyle = 'rgba(255,255,255,0.50)';
+    ctx.lineWidth = 2;
+    this.roundRect(ctx, x + 1, y + 1, w - 2, h - 2, r);
+    ctx.stroke();
+    ctx.restore();
     if (opts.accentColor) {
       ctx.fillStyle = opts.accentColor;
       this.roundRectTop(ctx, x, y, w, 3, r);
@@ -425,16 +459,16 @@ export class BaseScene {
   drawGlowEffect(ctx, x, y, w, h, color) {
     ctx.save();
     ctx.globalAlpha = 0.2;
-    ctx.strokeStyle = color;
+    ctx.strokeStyle = color || Theme.colors.accent.green;
     ctx.lineWidth = 2;
-    ctx.shadowColor = color;
+    ctx.shadowColor = color || Theme.colors.accent.green;
     ctx.shadowBlur = 12;
     this.roundRect(ctx, x - 2, y - 2, w + 4, h + 4, Theme.borderRadius.lg);
     ctx.stroke();
     ctx.restore();
   }
 
-  /** 六边形灵石字母块 */
+  /** 六边形灵石字母块（翡翠绿风格） */
   drawSpiritTile(ctx, x, y, size, opts = {}) {
     const cx = x + size / 2;
     const cy = y + size / 2;
@@ -442,7 +476,7 @@ export class BaseScene {
     const seed = opts.seed || 0;
     const rot = (opts.rotation || 0) + Math.sin((this.animTime || 0) * 1.8 + seed) * 0.04;
     const pulse = 0.9 + Math.sin((this.animTime || 0) * 2.2 + seed * 1.7) * 0.1;
-    const glow = opts.glowColor || Theme.colors.accent.gold;
+    const glow = opts.glowColor || Theme.colors.accent.green;
 
     ctx.save();
     ctx.translate(cx, cy);
@@ -460,10 +494,11 @@ export class BaseScene {
     }
     ctx.closePath();
 
+    // 翡翠绿渐变（替代深紫）
     const g = ctx.createLinearGradient(-r, -r * 0.8, r, r);
-    g.addColorStop(0, opts.topColor || Theme.colors.game.tileTop);
-    g.addColorStop(0.45, '#4a2f85');
-    g.addColorStop(1, opts.bottomColor || Theme.colors.game.tileBottom);
+    g.addColorStop(0, opts.topColor || '#d1fae5');
+    g.addColorStop(0.5, '#a7f3d0');
+    g.addColorStop(1, opts.bottomColor || '#6ee7b7');
     ctx.fillStyle = g;
     ctx.fill();
 
@@ -472,7 +507,8 @@ export class BaseScene {
     ctx.lineWidth = opts.borderWidth || 2;
     ctx.stroke();
 
-    ctx.globalAlpha = 0.22;
+    // 高光
+    ctx.globalAlpha = 0.30;
     ctx.beginPath();
     ctx.arc(-r * 0.15, -r * 0.35, r * 0.35, 0, Math.PI * 2);
     ctx.fillStyle = '#ffffff';
@@ -528,16 +564,17 @@ export class BaseScene {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     if (color === 'gradient') {
+      // 翡翠绿渐变标题
       const g = ctx.createLinearGradient(x - 90, y, x + 90, y);
-      g.addColorStop(0, Theme.colors.accent.gold);
-      g.addColorStop(0.5, Theme.colors.accent.pink);
-      g.addColorStop(1, Theme.colors.accent.lavender);
+      g.addColorStop(0, '#059669');
+      g.addColorStop(0.5, '#d4a017');
+      g.addColorStop(1, '#065f46');
       ctx.fillStyle = g;
-      ctx.shadowColor = 'rgba(255,215,0,0.45)';
+      ctx.shadowColor = 'rgba(5,150,105,0.35)';
       ctx.shadowBlur = 12;
     } else {
       ctx.fillStyle = color || Theme.colors.text.primary;
-      ctx.shadowColor = 'rgba(0,0,0,0.3)';
+      ctx.shadowColor = 'rgba(30,28,0,0.15)';
       ctx.shadowBlur = 4;
     }
     ctx.fillText(text, x, y);
@@ -598,17 +635,17 @@ export class BaseScene {
 
       if (selected) {
         const tabGrad = ctx.createLinearGradient(x, y, x, y + tabH);
-        tabGrad.addColorStop(0, Theme.colors.button.gold);
-        tabGrad.addColorStop(1, Theme.colors.accent.gold);
+        tabGrad.addColorStop(0, '#34d399');
+        tabGrad.addColorStop(1, '#059669');
         ctx.fillStyle = tabGrad;
       } else {
-        ctx.fillStyle = Theme.colors.glass;
+        ctx.fillStyle = 'rgba(255,255,255,0.50)';
       }
       this.roundRect(ctx, x, y, tabW, tabH, Theme.borderRadius.md);
       ctx.fill();
 
       ctx.font = `bold ${Theme.fonts.sizes.body}px ${Theme.fonts.primary}`;
-      ctx.fillStyle = selected ? Theme.colors.text.dark : Theme.colors.text.secondary;
+      ctx.fillStyle = selected ? Theme.colors.text.white : Theme.colors.text.secondary;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(tab.label, x + tabW / 2, y + tabH / 2);
@@ -638,16 +675,38 @@ export class BaseScene {
     ctx.closePath();
   }
 
-  /** 故事卷轴面板（原型 story-scroll） */
+  /** 故事卷轴面板（羊皮纸纹理风格） */
   drawStoryScroll(ctx, x, y, w, h) {
     ctx.save();
-    const grad = ctx.createLinearGradient(x, y, x, y + h);
-    grad.addColorStop(0, 'rgba(139,90,43,0.35)');
-    grad.addColorStop(1, 'rgba(80,50,20,0.25)');
-    ctx.fillStyle = grad;
+    // 羊皮纸底色
+    ctx.fillStyle = '#FFF9C4';
     this.roundRect(ctx, x, y, w, h, Theme.borderRadius.xl);
     ctx.fill();
-    ctx.strokeStyle = Theme.colors.card.border;
+    // 点状纹理
+    ctx.save();
+    ctx.clip();
+    ctx.globalAlpha = 0.3;
+    ctx.fillStyle = '#e0d6a0';
+    for (let px = x; px < x + w; px += 20) {
+      for (let py = y; py < y + h; py += 20) {
+        ctx.beginPath();
+        ctx.arc(px, py, 1, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    ctx.restore();
+    // 内阴影
+    ctx.save();
+    ctx.clip();
+    const inset = ctx.createLinearGradient(x, y, x, y + h);
+    inset.addColorStop(0, 'rgba(186,170,114,0.25)');
+    inset.addColorStop(0.5, 'rgba(186,170,114,0)');
+    inset.addColorStop(1, 'rgba(186,170,114,0.25)');
+    ctx.fillStyle = inset;
+    ctx.fillRect(x, y, w, h);
+    ctx.restore();
+    // 翡翠绿边框
+    ctx.strokeStyle = Theme.colors.card.jade;
     ctx.lineWidth = 2;
     this.roundRect(ctx, x, y, w, h, Theme.borderRadius.xl);
     ctx.stroke();
@@ -747,7 +806,7 @@ export class BaseScene {
     return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
   }
 
-  // 灵气光效动画
+  // 灵气光效动画（翡翠绿风格）
   drawSpiritGlow(ctx, x, y, size, color, intensity = 1) {
     const t = this.animTime || 0;
     const pulse = 0.5 + Math.sin(t * 3) * 0.5;

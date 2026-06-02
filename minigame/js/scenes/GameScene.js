@@ -325,9 +325,9 @@ export class GameScene extends BaseScene {
       ctx.save();
       ctx.globalAlpha = 1 - a.progress;
       ctx.font = `bold ${30 * scale}px "Microsoft YaHei", sans-serif`;
-      ctx.fillStyle = Theme.colors.accent.gold;
+      ctx.fillStyle = Theme.colors.accent.green;
       ctx.textAlign = 'center';
-      ctx.shadowColor = Theme.colors.accent.gold;
+      ctx.shadowColor = Theme.colors.accent.green;
       ctx.shadowBlur = 20;
       ctx.fillText(a.text, w / 2, h * 0.35 - a.progress * 50);
       ctx.restore();
@@ -392,7 +392,7 @@ export class GameScene extends BaseScene {
 
     ctx.textBaseline = 'middle';
     ctx.font = `bold ${Theme.fonts.sizes.body}px ${Theme.fonts.primary}`;
-    ctx.fillStyle = Theme.colors.text.gold;
+    ctx.fillStyle = Theme.colors.text.green;
     ctx.textAlign = 'center';
     const storyTitle = this.fromErrorBook ? '👿 心魔残影' : '📜 天书残卷';
     ctx.fillText(storyTitle, w / 2, scrollY + 32);
@@ -408,8 +408,8 @@ export class GameScene extends BaseScene {
     ctx.textBaseline = 'top';
     ctx.textAlign = 'left';
     ctx.font = `${fontSize}px ${Theme.fonts.primary}`;
-    ctx.fillStyle = Theme.colors.text.cyan;
-    ctx.shadowColor = Theme.colors.text.cyan;
+    ctx.fillStyle = Theme.colors.text.green;
+    ctx.shadowColor = Theme.colors.text.green;
     ctx.shadowBlur = 10;
     const lines = this._buildStoryLines(ctx, story, contentW);
     const totalTextH = lines.length * lineHeight;
@@ -434,9 +434,9 @@ export class GameScene extends BaseScene {
       const cx = contentX + ctx.measureText(lastLine).width + 4;
       const cy = drawY + (lines.length - 1) * lineHeight + 2;
       ctx.shadowBlur = 0;
-      ctx.fillStyle = Theme.colors.text.gold;
+      ctx.fillStyle = Theme.colors.text.green;
       ctx.fillText('|', cx, cy);
-      ctx.fillStyle = Theme.colors.text.cyan;
+      ctx.fillStyle = Theme.colors.text.green;
       ctx.shadowBlur = 10;
     }
 
@@ -454,12 +454,12 @@ export class GameScene extends BaseScene {
     ctx.restore();
 
     ctx.font = `14px ${Theme.fonts.primary}`;
-    ctx.fillStyle = Theme.colors.text.cyan;
+    ctx.fillStyle = Theme.colors.text.green;
     ctx.textAlign = 'center';
     const hint = this.storyTypingDone ? '点击继续 · 进入记忆' : '点击加速显示全文';
     ctx.fillText(hint, w / 2, scrollY + scrollH + 36);
 
-    this.addButton((w - 140) / 2, scrollY + scrollH + 52, 140, 40, '跳过 →', Theme.colors.button.gold, () => {
+    this.addButton((w - 140) / 2, scrollY + scrollH + 52, 140, 40, '跳过 →', Theme.colors.button.primary, () => {
       this.state = 'memory';
       this.animTime = 0;
     });
@@ -476,18 +476,9 @@ export class GameScene extends BaseScene {
 
     const headerBottom = this.drawRealmHeader(ctx, w, realm, `第${this.stage}关`);
 
-    ctx.textAlign = 'right';
-    ctx.textBaseline = 'middle';
-    ctx.font = `bold ${Theme.fonts.sizes.header}px ${Theme.fonts.primary}`;
-    ctx.fillStyle = Theme.colors.text.cyan;
-    ctx.shadowColor = Theme.colors.text.cyan;
-    ctx.shadowBlur = 8;
-    ctx.fillText(`${Math.ceil(this.memoryTimer)}s`, w - 16, Theme.layout.safeTop);
-    ctx.shadowBlur = 0;
-
     const titleSize = Theme.fonts.sizes.title;
     const titleY = headerBottom + gap.xl + titleSize / 2;
-    this.drawTitle(ctx, '🧠 凝神记忆', w / 2, titleY, titleSize, Theme.colors.text.cyan);
+    this.drawTitle(ctx, '🧠 凝神记忆', w / 2, titleY, titleSize, Theme.colors.text.green);
 
     const hintY = titleY + titleSize / 2 + gap.lg + Theme.fonts.sizes.caption / 2;
     ctx.font = `${Theme.fonts.sizes.caption}px ${Theme.fonts.primary}`;
@@ -496,18 +487,7 @@ export class GameScene extends BaseScene {
     ctx.textBaseline = 'middle';
     ctx.fillText('慢慢看，准备好了再点下方按钮', w / 2, hintY);
 
-    const barY = hintY + Theme.fonts.sizes.caption / 2 + gap.lg;
-    const contentTop = barY + gap.md + 6;
-    const barW = w - 32;
-    ctx.fillStyle = 'rgba(255,255,255,0.12)';
-    this.roundRect(ctx, 16, barY, barW, 6, 3);
-    ctx.fill();
-    const barGrad = ctx.createLinearGradient(16, barY, 16 + barW, barY);
-    barGrad.addColorStop(0, Theme.colors.accent.pink);
-    barGrad.addColorStop(1, Theme.colors.accent.gold);
-    ctx.fillStyle = barGrad;
-    this.roundRect(ctx, 16, barY, barW * Math.max(0.05, this.memoryTimer / this.memoryDuration), 6, 3);
-    ctx.fill();
+    const contentTop = hintY + Theme.fonts.sizes.caption / 2 + gap.lg;
 
     const words = this.memoryWords;
     const cols = words.length <= 1 ? 1 : 2;
@@ -542,7 +522,7 @@ export class GameScene extends BaseScene {
       let lineY = y + cardH * 0.18;
 
       ctx.font = `bold ${Math.min(42, cardW * 0.22)}px ${Theme.fonts.primary}`;
-      ctx.fillStyle = Theme.colors.text.gold;
+      ctx.fillStyle = Theme.colors.text.green;
       ctx.textAlign = 'center';
       ctx.fillText(tw.word, cx, lineY);
       lineY += cardH * 0.16;
@@ -555,7 +535,7 @@ export class GameScene extends BaseScene {
       }
 
       ctx.font = `bold ${Math.min(22, cardW * 0.11)}px ${Theme.fonts.primary}`;
-      ctx.fillStyle = Theme.colors.text.cyan;
+      ctx.fillStyle = Theme.colors.text.green;
       ctx.fillText(tw.meaning, cx, lineY);
       lineY += cardH * 0.14;
 
@@ -580,7 +560,7 @@ export class GameScene extends BaseScene {
     const btnW = Math.min(200, w - 48);
     const btnH = 48;
     const btnY = h - 72;
-    this.addButton((w - btnW) / 2, btnY, btnW, btnH, '开始挑战 ⚔️', Theme.colors.button.gold, () => {
+    this.addButton((w - btnW) / 2, btnY, btnW, btnH, '开始挑战 ⚔️', Theme.colors.button.primary, () => {
       this.state = 'playing';
       this.animTime = 0;
       this.generateLetters();
@@ -625,7 +605,50 @@ export class GameScene extends BaseScene {
     const headerBottom = this.drawRealmHeader(
       ctx, w, realm, `第${this.stage}关 · 剩余 ${remaining}/${total} 个字母`
     );
-    this._gameHeaderBottom = headerBottom;
+
+    // 显示目标单词中文释义
+    const meanings = this.stageData.words.map(w => w.meaning).join('、');
+    const meaningY = headerBottom + Theme.layout.gap.lg;
+    ctx.font = `bold ${Theme.fonts.sizes.title}px ${Theme.fonts.primary}`;
+    ctx.fillStyle = Theme.colors.accent.amber;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.shadowColor = Theme.colors.accent.amber;
+    ctx.shadowBlur = 10;
+    ctx.fillText(meanings, w / 2, meaningY);
+    ctx.shadowBlur = 0;
+
+    // 消除进度条（复用上方已声明的 targetLetters / remaining / total）
+    const remainingCount = this.letters.filter((l) => !l.isDistractor && l.visible).length;
+    const totalCount = this.letters.filter((l) => !l.isDistractor).length;
+    const collected = totalCount - remainingCount;
+    const progress = totalCount > 0 ? collected / totalCount : 0;
+
+    const barY = meaningY + Theme.fonts.sizes.title + Theme.layout.gap.md;
+    const barW = w - 60;
+    const barH = 12;
+    const barX = 30;
+
+    ctx.fillStyle = 'rgba(6,78,59,0.12)';
+    this.roundRect(ctx, barX, barY, barW, barH, 6);
+    ctx.fill();
+
+    if (progress > 0) {
+      const progGrad = ctx.createLinearGradient(barX, barY, barX + barW * progress, barY);
+      progGrad.addColorStop(0, Theme.colors.accent.green);
+      progGrad.addColorStop(1, Theme.colors.accent.amber);
+      ctx.fillStyle = progGrad;
+      this.roundRect(ctx, barX, barY, Math.max(barH, barW * progress), barH, 6);
+      ctx.fill();
+    }
+
+    ctx.font = `bold ${Theme.fonts.sizes.caption}px ${Theme.fonts.primary}`;
+    ctx.fillStyle = Theme.colors.text.green;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText(`消除进度 ${collected}/${totalCount}`, w / 2, barY + barH + 4);
+
+    this._gameHeaderBottom = barY + barH + 4 + Theme.fonts.sizes.caption + Theme.layout.gap.sm;
     this._playLayout = this._calcPlayLayout(w, h);
 
     this.renderLetters(ctx, w, h);
@@ -682,7 +705,7 @@ export class GameScene extends BaseScene {
       this.drawSpiritTile(ctx, a.x, a.y, s, {
         text: a.text,
         seed: 0,
-        glowColor: Theme.colors.accent.gold,
+        glowColor: Theme.colors.accent.green,
       });
       ctx.restore();
     }
@@ -696,19 +719,19 @@ export class GameScene extends BaseScene {
     this._slotsY = slotsY;
     this._slotSize = slotSize;
 
-    ctx.fillStyle = Theme.colors.game.slotBar;
+    ctx.fillStyle = 'rgba(255,250,223,0.88)';
     this.roundRect(ctx, slotsX - barPad, slotsY - barPad, slotsW + barPad * 2, slotSize + barPad * 2, 12);
     ctx.fill();
-    ctx.strokeStyle = Theme.colors.game.slotBorder;
+    ctx.strokeStyle = 'rgba(6,78,59,0.15)';
     ctx.lineWidth = 1;
     this.roundRect(ctx, slotsX - barPad, slotsY - barPad, slotsW + barPad * 2, slotSize + barPad * 2, 12);
     ctx.stroke();
 
     ctx.font = `bold ${Theme.fonts.sizes.caption}px ${Theme.fonts.primary}`;
-    ctx.fillStyle = Theme.colors.text.gold;
+    ctx.fillStyle = Theme.colors.text.green;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(`⚡ 灵槽 (${this.slots.length}/${this.maxSlots})`, w / 2, slotsY - 18);
+    ctx.fillText(`🌿 灵槽 (${this.slots.length}/${this.maxSlots})`, w / 2, slotsY - 18);
 
     for (let i = 0; i < this.maxSlots; i++) {
       const x = slotsX + i * (slotSize + slotGap);
@@ -723,11 +746,11 @@ export class GameScene extends BaseScene {
           glowColor: Theme.colors.accent.cyan,
         });
       } else {
-        ctx.fillStyle = Theme.colors.game.slotEmpty;
+        ctx.fillStyle = 'rgba(6,78,59,0.06)';
         this.roundRect(ctx, x, y, slotSize, slotSize, 8);
         ctx.fill();
         ctx.setLineDash([3, 3]);
-        ctx.strokeStyle = Theme.colors.game.slotBorder;
+        ctx.strokeStyle = 'rgba(6,78,59,0.15)';
         ctx.lineWidth = 1;
         this.roundRect(ctx, x, y, slotSize, slotSize, 8);
         ctx.stroke();
@@ -738,7 +761,7 @@ export class GameScene extends BaseScene {
     for (const a of this.clearAnimations) {
       ctx.save();
       ctx.globalAlpha = 1 - a.progress;
-      ctx.fillStyle = Theme.colors.accent.gold;
+      ctx.fillStyle = Theme.colors.accent.amber;
       ctx.beginPath();
       ctx.arc(a.x + slotSize / 2, a.y + slotSize / 2, slotSize * 0.6 * (1 + a.progress * 0.5), 0, Math.PI * 2);
       ctx.fill();
@@ -747,7 +770,7 @@ export class GameScene extends BaseScene {
   }
 
   renderResult(ctx, w, h) {
-    ctx.fillStyle = Theme.colors.background.overlay;
+    ctx.fillStyle = 'rgba(30,28,0,0.45)';
     ctx.fillRect(0, 0, w, h);
 
     const cardW = w * 0.8;
@@ -770,7 +793,7 @@ export class GameScene extends BaseScene {
     ctx.fillText(isWin ? '🎉' : '💫', w / 2, cardY + 60);
 
     ctx.font = `bold 28px ${Theme.fonts.primary}`;
-    ctx.fillStyle = isWin ? Theme.colors.accent.gold : Theme.colors.button.danger;
+    ctx.fillStyle = isWin ? Theme.colors.accent.amber : Theme.colors.button.danger;
     ctx.fillText(isWin ? (isErrorBook ? '心魔已除！' : '突破成功！') : '走火入魔', w / 2, cardY + 110);
 
     ctx.font = `14px ${Theme.fonts.primary}`;
@@ -793,7 +816,7 @@ export class GameScene extends BaseScene {
       }
     });
     if (isWin && !isErrorBook && this.stage < 200) {
-      this.addButton(w / 2 + 8, btnY, btnW, btnH, '继续修炼', Theme.colors.button.gold, () => {
+      this.addButton(w / 2 + 8, btnY, btnW, btnH, '继续修炼', Theme.colors.button.primary, () => {
         this.onEnter({ stage: this.stage + 1 });
       });
     }

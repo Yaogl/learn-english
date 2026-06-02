@@ -280,7 +280,7 @@ export class BattleScene extends BaseScene {
     ctx.fillText('分享卡片给好友，好友点击即可加入', w / 2, cardY + 85);
 
     ctx.font = `bold 36px ${Theme.fonts.primary}`;
-    ctx.fillStyle = Theme.colors.accent.gold;
+    ctx.fillStyle = Theme.colors.accent.green;
     ctx.fillText(this.roomId, w / 2, cardY + 130);
 
     ctx.font = `12px ${Theme.fonts.primary}`;
@@ -292,7 +292,7 @@ export class BattleScene extends BaseScene {
       ctx.fillText(this.statusHint, w / 2, cardY + 182);
     }
 
-    this.addButton(w / 2 - 80, cardY + cardH + 24, 160, 44, '分享给好友', Theme.colors.button.gold, () => {
+    this.addButton(w / 2 - 80, cardY + cardH + 24, 160, 44, '分享给好友', Theme.colors.button.primary, () => {
       this.shareToFriend();
     });
     this.addButton(w / 2 - 60, cardY + cardH + 78, 120, 36, '取消', Theme.colors.button.muted, () => {
@@ -309,8 +309,8 @@ export class BattleScene extends BaseScene {
     const cardY = headerBottom + Theme.layout.gap.lg;
 
     this.drawCard(ctx, cardX, cardY, cardW, cardH, {
-      border: Theme.colors.button.gold,
-      glow: Theme.colors.button.gold,
+      border: Theme.colors.button.primary,
+      glow: Theme.colors.button.primary,
     });
 
     ctx.font = '48px sans-serif';
@@ -327,7 +327,7 @@ export class BattleScene extends BaseScene {
     ctx.fillText(`房间号 ${this.roomId}`, w / 2, cardY + 135);
     ctx.fillText('接受挑战，一起拼速度记单词', w / 2, cardY + 158);
 
-    this.addButton(w / 2 - 80, cardY + cardH + 28, 160, 44, '接受挑战', Theme.colors.button.gold, () => {
+    this.addButton(w / 2 - 80, cardY + cardH + 28, 160, 44, '接受挑战', Theme.colors.button.primary, () => {
       this.acceptInvite();
     });
     this.addButton(w / 2 - 60, cardY + cardH + 82, 120, 36, '暂不', Theme.colors.button.muted, () => {
@@ -389,6 +389,46 @@ export class BattleScene extends BaseScene {
     ctx.font = `bold 22px ${Theme.fonts.primary}`;
     ctx.fillStyle = Theme.colors.button.danger;
     ctx.fillText(`好友 ${this.opponentScore}`, w * 3 / 4, scoreY);
+
+    // 双方进度条
+    const totalWords = this.words.length || 1;
+    const progBarY = scoreY + 24;
+    const progBarW = w * 0.32;
+    const progBarH = 10;
+    const myProg = Math.min(1, this.myScore / totalWords);
+    const oppProg = Math.min(1, this.opponentScore / totalWords);
+
+    // 我的进度条
+    const myBarX = w / 4 - progBarW / 2;
+    ctx.fillStyle = 'rgba(6,78,59,0.12)';
+    this.roundRect(ctx, myBarX, progBarY, progBarW, progBarH, 5);
+    ctx.fill();
+    if (myProg > 0) {
+      ctx.fillStyle = Theme.colors.button.primary;
+      this.roundRect(ctx, myBarX, progBarY, Math.max(progBarH, progBarW * myProg), progBarH, 5);
+      ctx.fill();
+    }
+    ctx.font = `11px ${Theme.fonts.primary}`;
+    ctx.fillStyle = Theme.colors.text.secondary;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText(`${this.myScore}/${totalWords}`, w / 4, progBarY + progBarH + 3);
+
+    // 好友进度条
+    const oppBarX = w * 3 / 4 - progBarW / 2;
+    ctx.fillStyle = 'rgba(6,78,59,0.12)';
+    this.roundRect(ctx, oppBarX, progBarY, progBarW, progBarH, 5);
+    ctx.fill();
+    if (oppProg > 0) {
+      ctx.fillStyle = Theme.colors.button.danger;
+      this.roundRect(ctx, oppBarX, progBarY, Math.max(progBarH, progBarW * oppProg), progBarH, 5);
+      ctx.fill();
+    }
+    ctx.font = `11px ${Theme.fonts.primary}`;
+    ctx.fillStyle = Theme.colors.text.secondary;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText(`${this.opponentScore}/${totalWords}`, w * 3 / 4, progBarY + progBarH + 3);
   }
 
   renderResult(ctx, w, h, headerBottom) {

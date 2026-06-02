@@ -2,98 +2,391 @@ import { BaseScene } from './BaseScene';
 import { Theme } from '../theme.js';
 
 /**
- * 首页 - 背景图 + emoji 按钮（无蒙层）
+ * 首页 — 炫酷修仙风
+ * 背景图清晰 + 萤火虫 + 光晕 + 按钮贴底
  */
 export class MainMenu extends BaseScene {
   constructor() {
     super();
     this.bgImage = null;
     this.bgReady = false;
+    this.fireflies = [];
+    this._fireflyInit = false;
+    this.sparkles = [];
+    this._sparkleInit = false;
+    this.touchRipples = [];
   }
 
   onEnter() {
     super.onEnter();
     this.loadImages();
+    this.touchRipples = [];
   }
 
   loadImages() {
     if (!this.bgImage) {
       this.bgImage = wx.createImage();
       this.bgImage.onload = () => { this.bgReady = true; };
-      this.bgImage.src = 'assets/imgs/index.png';
+      this.bgImage.src = 'assets/imgs/mainParallaxBg.jpg';
     }
   }
 
+  onTouchEnd(x, y) {
+    // 点击波纹效果
+    this.touchRipples.push({ x, y, r: 0, alpha: 0.6, maxR: 60 });
+    super.onTouchEnd(x, y);
+  }
+
   render(ctx, w, h) {
+    const t = this.animTime || 0;
+
+    // ===== 1. 背景图 — 清晰无蒙层 =====
     if (this.bgReady) {
       ctx.drawImage(this.bgImage, 0, 0, w, h);
     } else {
       this.drawPageBackground(ctx, w, h);
     }
 
-    const menuItems = [
-      { icon: '⚔️', label: '好友对战', scene: 'battle', bg: Theme.colors.menu.battle },
-      { icon: '📖', label: '闯关模式', scene: 'levels', bg: Theme.colors.menu.levels },
-      { icon: '📝', label: '错题本', scene: 'errorbook', bg: Theme.colors.menu.errorbook },
-      { icon: '🏆', label: '排行榜', scene: 'rank', bg: Theme.colors.menu.rank },
-      { icon: '🌐', label: '全服排行', scene: 'rank', bg: Theme.colors.menu.globalRank },
-      { icon: '👨‍👩‍👧', label: '家长面板', scene: 'parent', bg: Theme.colors.menu.parent },
-    ];
+    // ===== 2. 中央光晕（柔化画面，不遮挡主体） =====
+    this._drawCenterGlow(ctx, w, h, t);
 
-    const cols = 3;
-    const rows = 2;
+    // ===== 3. 萤火虫粒子 =====
+    this._drawFireflies(ctx, w, h, t);
+
+    // ===== 4. 闪烁星光 =====
+    this._drawSparkles(ctx, w, h, t);
+
+    // ===== 5. 花瓣飘落 =====
+    this.drawFallingPetals(ctx, w, h);
+
+    // ===== 6. 点击波纹 =====
+    this._drawTouchRipples(ctx);
+
+    // ===== 7. 标题 — 发光呼吸效果 =====
+    this._drawAnimatedTitle(ctx, w, h, t);
+
+    // ===== 8. 底部菜单区 =====
+    this._drawBottomMenu(ctx, w, h, t);
+  }
+
+  update(dt) {
+    super.update(dt);
+    // 更新点击波纹
+    this.touchRipples = this.touchRipples.filter(r => {
+      r.r += dt * 120;
+      r.alpha -= dt * 1.5;
+      return r.alpha > 0;
+    });
+  }
+
+  /** 中央柔光（让画面有仙气感） */
+  _drawCenterGlow(ctx, w, h, t) {
+    ctx.save();
+    const pulse = 0.15 + Math.sin(t * 0.8) * 0.05;
+    ctx.globalAlpha = pulse;
+    const glow = ctx.createRadialGradient(w / 2, h * 0.45, 0, w / 2, h * 0.45, w * 0.5);
+    glow.addColorStop(0, 'rgba(255,250,223,0.4)');
+    glow.addColorStop(0.5, 'rgba(167,243,176,0.1)');
+    glow.addColorStop(1, 'rgba(255,250,223,0)');
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, w, h);
+    ctx.restore();
+  }
+
+  /** 萤火虫粒子 */
+  _drawFireflies(ctx, w, h, t) {
+    if (!this._fireflyInit) {
+      this._fireflyInit = true;
+      this.fireflies = [];
+      for (let i = 0; i < 18; i++) {
+        this.fireflies.push({
+          x: Math.random() * w,
+          y: Math.random() * h * 0.7,
+          vx: (Math.random() - 0.5) * 20,
+          vy: (Math.random() - 0.5) * 15,
+          size: 1.5 + Math.random() * 2.5,
+          phase: Math.random() * Math.PI * 2,
+          speed: 0.5 + Math.random() * 1.5,
+          color: ['#ffd700', '#4dffe8', '#abf4ac', '#f472b6', '#c084fc'][i % 5],
+        });
+      }
+    }
+
+    ctx.save();
+    for (const f of this.fireflies) {
+      // 飘动轨迹
+      const fx = f.x + Math.sin(t * f.speed + f.phase) * 30 + Math.cos(t * 0.3 + f.phase) * 15;
+      const fy = f.y + Math.cos(t * f.speed * 0.7 + f.phase) * 20 + Math.sin(t * 0.2 + f.phase) * 10;
+      // 呼吸闪烁
+      const alpha = 0.3 + Math.sin(t * 2.5 + f.phase) * 0.35;
+      const glowSize = f.size * (2 + Math.sin(t * 3 + f.phase) * 0.8);
+
+      // 外层光晕
+      ctx.globalAlpha = alpha * 0.3;
+      ctx.fillStyle = f.color;
+      ctx.shadowColor = f.color;
+      ctx.shadowBlur = 15;
+      ctx.beginPath();
+      ctx.arc(fx, fy, glowSize, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 内核亮点
+      ctx.globalAlpha = alpha;
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      ctx.arc(fx, fy, f.size * 0.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  /** 闪烁星光 */
+  _drawSparkles(ctx, w, h, t) {
+    if (!this._sparkleInit) {
+      this._sparkleInit = true;
+      this.sparkles = [];
+      for (let i = 0; i < 12; i++) {
+        this.sparkles.push({
+          x: Math.random() * w,
+          y: Math.random() * h * 0.6,
+          size: 1 + Math.random() * 2,
+          phase: Math.random() * Math.PI * 2,
+          speed: 1.5 + Math.random() * 2,
+        });
+      }
+    }
+
+    ctx.save();
+    for (const s of this.sparkles) {
+      const alpha = Math.max(0, Math.sin(t * s.speed + s.phase));
+      if (alpha < 0.1) continue;
+      ctx.globalAlpha = alpha * 0.8;
+      ctx.fillStyle = '#ffffff';
+      ctx.shadowColor = '#ffffff';
+      ctx.shadowBlur = 6;
+      // 十字星
+      ctx.save();
+      ctx.translate(s.x, s.y);
+      ctx.rotate(t * 0.5 + s.phase);
+      const arm = s.size * (1 + alpha);
+      ctx.fillRect(-arm * 3, -0.5, arm * 6, 1);
+      ctx.fillRect(-0.5, -arm * 3, 1, arm * 6);
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+
+  /** 点击波纹 */
+  _drawTouchRipples(ctx) {
+    ctx.save();
+    for (const r of this.touchRipples) {
+      ctx.globalAlpha = r.alpha;
+      ctx.strokeStyle = 'rgba(167,243,176,0.6)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(r.x, r.y, r.r, 0, Math.PI * 2);
+      ctx.stroke();
+      // 内圈
+      ctx.globalAlpha = r.alpha * 0.4;
+      ctx.beginPath();
+      ctx.arc(r.x, r.y, r.r * 0.6, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  /** 发光标题 */
+  _drawAnimatedTitle(ctx, w, h, t) {
+    ctx.save();
+    const titleY = h * 0.12;
+    const breathe = 1 + Math.sin(t * 1.5) * 0.03;
+
+    ctx.translate(w / 2, titleY);
+    ctx.scale(breathe, breathe);
+
+    // 外层光晕
+    ctx.globalAlpha = 0.2 + Math.sin(t * 2) * 0.1;
+    ctx.font = `bold 28px ${Theme.fonts.primary}`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#abf4ac';
+    ctx.shadowColor = '#abf4ac';
+    ctx.shadowBlur = 25;
+    ctx.fillText('滢滢知语', 0, 0);
+
+    // 主标题
+    ctx.globalAlpha = 1;
+    ctx.shadowBlur = 12;
+    ctx.shadowColor = 'rgba(5,150,105,0.4)';
+    const grad = ctx.createLinearGradient(-80, 0, 80, 0);
+    grad.addColorStop(0, '#065f46');
+    grad.addColorStop(0.3, '#059669');
+    grad.addColorStop(0.7, '#d4a017');
+    grad.addColorStop(1, '#065f46');
+    ctx.fillStyle = grad;
+    ctx.fillText('滢滢知语', 0, 0);
+
+    // 副标题
+    ctx.shadowBlur = 0;
+    ctx.globalAlpha = 0.6 + Math.sin(t * 1.8 + 1) * 0.2;
+    ctx.font = `${Theme.fonts.sizes.small}px ${Theme.fonts.primary}`;
+    ctx.fillStyle = Theme.colors.text.secondary;
+    ctx.fillText('修仙背单词 · 飞升不是梦', 0, 24);
+
+    ctx.restore();
+  }
+
+  /** 底部菜单区 — 贴底布局 */
+  _drawBottomMenu(ctx, w, h, t) {
     const padX = 20;
-    const padBottom = 30;
-    const entryH = h * 0.28;
-    const entryY = h - entryH - padBottom;
-    const contentW = w - padX * 2;
-    const btnW = contentW / cols;
-    const btnH = entryH / rows;
-    const iconSize = Math.min(btnW * 0.5, btnH * 0.45);
+    const bottomPad = 50; // 距底部间距（留出安全区）
 
     this.buttons = [];
 
-    for (let i = 0; i < menuItems.length; i++) {
-      const item = menuItems[i];
-      const col = i % cols;
-      const row = Math.floor(i / cols);
-      const cx = padX + col * btnW + btnW / 2;
-      const cy = entryY + row * btnH + btnH / 2;
-      const r = iconSize * 0.55;
+    // --- 副按钮：2×2 网格（先算，贴底） ---
+    const gridGap = 10;
+    const gridBtnW = (w - padX * 2 - gridGap) / 2;
+    const gridBtnH = 42;
+    const gridRows = 2;
+    const gridH = gridRows * gridBtnH + (gridRows - 1) * gridGap;
 
-      ctx.save();
-      const grad = ctx.createRadialGradient(cx, cy - 6, r * 0.15, cx, cy - 6, r);
-      grad.addColorStop(0, this.lightenColor(item.bg, 20));
-      grad.addColorStop(1, item.bg);
-      ctx.fillStyle = grad;
-      ctx.shadowColor = 'rgba(0,0,0,0.25)';
-      ctx.shadowBlur = 8;
-      ctx.beginPath();
-      ctx.arc(cx, cy - 6, r, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = 'rgba(255,255,255,0.55)';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-      ctx.restore();
+    // --- 主按钮 ---
+    const mainBtnW = Math.min(200, w - 60);
+    const mainBtnH = 46;
+    const mainBtnGap = 14;
 
-      ctx.font = `${iconSize * 0.58}px sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(item.icon, cx, cy - 6);
+    // 从底部往上算
+    const gridBottom = h - bottomPad;
+    const gridTop = gridBottom - gridH;
+    const mainBtnY = gridTop - mainBtnGap - mainBtnH;
 
-      ctx.font = `bold ${Math.min(15, btnW * 0.11)}px ${Theme.fonts.primary}`;
-      ctx.fillStyle = '#fff';
-      ctx.shadowColor = 'rgba(0,0,0,0.6)';
-      ctx.shadowBlur = 4;
-      ctx.fillText(item.label, cx, cy + iconSize * 0.45);
-      ctx.shadowBlur = 0;
+    // 底部渐变遮罩（轻薄，不遮挡太多背景）
+    const maskTop = mainBtnY - 30;
+    const maskGrad = ctx.createLinearGradient(0, maskTop, 0, h);
+    maskGrad.addColorStop(0, 'rgba(255,250,223,0)');
+    maskGrad.addColorStop(0.25, 'rgba(255,250,223,0.50)');
+    maskGrad.addColorStop(0.6, 'rgba(255,250,223,0.75)');
+    maskGrad.addColorStop(1, 'rgba(255,250,223,0.88)');
+    ctx.fillStyle = maskGrad;
+    ctx.fillRect(0, maskTop, w, h - maskTop);
 
-      this.addButton(
-        padX + col * btnW, entryY + row * btnH,
-        btnW, btnH,
-        '', 'transparent',
-        () => this.manager.switchTo(item.scene, { source: 'textbook' })
-      );
+    // --- 主按钮：闯关模式 ---
+    const mainBtnX = (w - mainBtnW) / 2;
+    this._drawPillButton(ctx, mainBtnX, mainBtnY, mainBtnW, mainBtnH, '📖', '闯关模式', true, t);
+    this.addButton(mainBtnX, mainBtnY, mainBtnW, mainBtnH, '', 'transparent', () => {
+      this.manager.switchTo('levels', { source: 'textbook' });
+    });
+
+    // --- 副按钮：2×2 ---
+    const subItems = [
+      { icon: '⚔️', label: '好友对战', scene: 'battle' },
+      { icon: '📝', label: '错题本', scene: 'errorbook' },
+      { icon: '👨‍👩‍👧', label: '家长面板', scene: 'parent' },
+      { icon: '🏆', label: '排行榜', scene: 'rank' },
+    ];
+
+    for (let i = 0; i < subItems.length; i++) {
+      const item = subItems[i];
+      const col = i % 2;
+      const row = Math.floor(i / 2);
+      const bx = padX + col * (gridBtnW + gridGap);
+      const by = gridTop + row * (gridBtnH + gridGap);
+      this._drawPillButton(ctx, bx, by, gridBtnW, gridBtnH, item.icon, item.label, false, t);
+      this.addButton(bx, by, gridBtnW, gridBtnH, '', 'transparent', () => {
+        this.manager.switchTo(item.scene, { source: 'textbook' });
+      });
     }
+
+    // --- 底部境界信息条 ---
+    const infoY = gridBottom + 6;
+    const infoW = w - padX * 2;
+    const infoH = 28;
+    const infoX = padX;
+    ctx.save();
+    ctx.fillStyle = 'rgba(6,78,59,0.06)';
+    this.roundRect(ctx, infoX, infoY, infoW, infoH, 14);
+    ctx.fill();
+    ctx.font = `bold 10px ${Theme.fonts.primary}`;
+    ctx.fillStyle = Theme.colors.text.muted;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('🌿 当前修行境界：筑基 - 第 4 关', w / 2, infoY + infoH / 2);
+    ctx.restore();
+  }
+
+  /** 绘制胶囊按钮（带呼吸光效） */
+  _drawPillButton(ctx, x, y, w, h, icon, label, isPrimary, t) {
+    ctx.save();
+    const r = h / 2;
+
+    // 呼吸光效（主按钮）
+    if (isPrimary) {
+      const glowPulse = 0.12 + Math.sin((t || 0) * 2) * 0.08;
+      ctx.globalAlpha = glowPulse;
+      ctx.fillStyle = '#abf4ac';
+      ctx.shadowColor = '#abf4ac';
+      ctx.shadowBlur = 20;
+      this.roundRect(ctx, x - 4, y - 4, w + 8, h + 8, r + 4);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      ctx.shadowBlur = 0;
+    }
+
+    // 阴影
+    ctx.shadowColor = isPrimary ? 'rgba(5,150,105,0.18)' : 'rgba(0,0,0,0.06)';
+    ctx.shadowBlur = isPrimary ? 10 : 5;
+    ctx.shadowOffsetY = 2;
+
+    // 背景
+    if (isPrimary) {
+      const grad = ctx.createLinearGradient(x, y, x + w, y);
+      grad.addColorStop(0, '#ecfdf5');
+      grad.addColorStop(0.5, '#d1fae5');
+      grad.addColorStop(1, '#ecfdf5');
+      ctx.fillStyle = grad;
+    } else {
+      ctx.fillStyle = 'rgba(255,255,255,0.88)';
+    }
+    this.roundRect(ctx, x, y, w, h, r);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetY = 0;
+
+    // 边框
+    ctx.strokeStyle = isPrimary ? 'rgba(5,150,105,0.30)' : 'rgba(6,78,59,0.14)';
+    ctx.lineWidth = isPrimary ? 1.5 : 1;
+    this.roundRect(ctx, x, y, w, h, r);
+    ctx.stroke();
+
+    // 内部高光线
+    ctx.save();
+    ctx.clip();
+    const highlightGrad = ctx.createLinearGradient(x, y, x, y + h);
+    highlightGrad.addColorStop(0, 'rgba(255,255,255,0.45)');
+    highlightGrad.addColorStop(0.5, 'rgba(255,255,255,0)');
+    ctx.fillStyle = highlightGrad;
+    ctx.fillRect(x, y, w, h / 2);
+    ctx.restore();
+
+    // 图标 + 文字
+    const fontSize = isPrimary ? 15 : 13;
+    ctx.font = `${fontSize}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const iconW = ctx.measureText(icon).width;
+    ctx.font = `bold ${fontSize}px ${Theme.fonts.primary}`;
+    const labelW = ctx.measureText(label).width;
+    const totalW = iconW + 8 + labelW;
+    const startX = x + (w - totalW) / 2;
+
+    ctx.font = `${fontSize}px sans-serif`;
+    ctx.fillText(icon, startX + iconW / 2, y + h / 2);
+
+    ctx.font = `bold ${fontSize}px ${Theme.fonts.primary}`;
+    ctx.fillStyle = Theme.colors.text.primary;
+    ctx.textAlign = 'left';
+    ctx.fillText(label, startX + iconW + 8, y + h / 2);
+
+    ctx.restore();
   }
 }
