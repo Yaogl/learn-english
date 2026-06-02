@@ -25,6 +25,11 @@ export class LevelSelect extends BaseScene {
     this.completedStages = loadCompletedStages();
     this.scrollY = 0;
     this._loadRealmImages();
+    // 加载关卡页背景图
+    if (!this._bgImg) {
+      this._bgImg = wx.createImage();
+      this._bgImg.src = 'assets/imgs/storyForestBg.png';
+    }
   }
 
   _loadRealmImages() {
@@ -84,12 +89,22 @@ export class LevelSelect extends BaseScene {
     const totalCompleted = this.completedStages.length;
     const totalStages = getTotalStages();
 
-    // 仙气背景图（无蒙层，直接铺满）
-    if (this.bgImage) {
+    // 森林背景 + 轻蒙层 + 花瓣
+    ctx.fillStyle = '#FFF9E8';
+    ctx.fillRect(0, 0, w, h);
+    if (this._bgImg && this._bgImg.width > 0) {
+      const img = this._bgImg;
+      const imgRatio = img.width / img.height;
+      const screenRatio = w / h;
+      let sx, sy, sw, sh;
+      if (imgRatio > screenRatio) { sh = img.height; sw = sh * screenRatio; sx = (img.width - sw) / 2; sy = 0; }
+      else { sw = img.width; sh = sw / screenRatio; sx = 0; sy = (img.height - sh) / 2; }
+      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, w, h);
+    } else if (this.bgImage) {
       ctx.drawImage(this.bgImage, 0, 0, w, h);
-    } else {
-      this.drawPageBackground(ctx, w, h);
     }
+    ctx.fillStyle = 'rgba(255,249,232,0.2)';
+    ctx.fillRect(0, 0, w, h);
     // 花瓣飘落
     this.drawFallingPetals(ctx, w, h);
 
@@ -99,21 +114,19 @@ export class LevelSelect extends BaseScene {
     // 返回按钮
     this.drawBackButton(ctx, 10, 10, onBack);
 
-    // 标题
+    // 标题（深棕绿，配森林背景）
     const titleY = 68;
     ctx.save();
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    // 标题文字 + 发光
     ctx.font = `bold ${Theme.fonts.sizes.header}px ${Theme.fonts.primary}`;
-    ctx.fillStyle = Theme.colors.accent.green;
-    ctx.shadowColor = Theme.colors.accent.green;
-    ctx.shadowBlur = 12;
+    ctx.fillStyle = '#3D6B4F';
+    ctx.shadowColor = 'rgba(61,107,79,0.3)';
+    ctx.shadowBlur = 8;
     ctx.fillText('境界晋升图', w / 2, titleY);
     ctx.shadowBlur = 0;
-    // 副标题
     ctx.font = `${Theme.fonts.sizes.small}px ${Theme.fonts.primary}`;
-    ctx.fillStyle = Theme.colors.text.secondary;
+    ctx.fillStyle = 'rgba(61,107,79,0.5)';
     ctx.fillText(`已通关 ${totalCompleted}/${totalStages} 关`, w / 2, titleY + 22);
     ctx.restore();
 
@@ -236,18 +249,22 @@ export class LevelSelect extends BaseScene {
       ctx.stroke();
       ctx.shadowBlur = 0;
 
-      // 锁定图标
+      // 锁定图标（简洁锁形）
       if (!isUnlocked) {
-        ctx.font = `${nodeR * 0.6}px sans-serif`;
+        ctx.font = `bold ${nodeR * 0.5}px ${Theme.fonts.primary}`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
+        ctx.fillStyle = 'rgba(6,78,59,0.3)';
         ctx.fillText('🔒', cx, cy);
       }
 
-      // 完成星星
+      // 完成对勾
       if (isCompleted) {
-        ctx.font = `${nodeR * 0.35}px sans-serif`;
-        ctx.fillText('⭐', cx + nodeRDraw * 0.55, cy - nodeRDraw * 0.55);
+        ctx.font = `bold ${nodeR * 0.5}px sans-serif`;
+        ctx.fillStyle = '#059669';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('✓', cx, cy);
       }
 
       ctx.restore();
@@ -318,29 +335,58 @@ export class LevelSelect extends BaseScene {
     }
   }
 
-  /** 关卡网格 — 灵叶节点 */
+  /** 关卡网格 — 森林背景 + 随机色块节点 */
   renderStages(ctx, w, h, onBack) {
     const realm = this.selectedRealm;
     if (!realm) return;
 
+    // 森林背景 + 轻蒙层
+    ctx.fillStyle = '#FFF9E8';
+    ctx.fillRect(0, 0, w, h);
+    if (this._bgImg && this._bgImg.width > 0) {
+      const img = this._bgImg;
+      const imgRatio = img.width / img.height;
+      const screenRatio = w / h;
+      let sx, sy, sw, sh;
+      if (imgRatio > screenRatio) { sh = img.height; sw = sh * screenRatio; sx = (img.width - sw) / 2; sy = 0; }
+      else { sw = img.width; sh = sw / screenRatio; sx = 0; sy = (img.height - sh) / 2; }
+      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, w, h);
+    }
+    ctx.fillStyle = 'rgba(255,249,232,0.2)';
+    ctx.fillRect(0, 0, w, h);
+    this.drawFallingPetals(ctx, w, h);
+
     this.drawBackButton(ctx, 10, 10, onBack);
 
-    // 境界信息卡
+    // 境界信息卡（毛玻璃风格）
     const panelY = 60;
-    this.drawGlassPanel(ctx, 16, panelY, w - 32, 70, {
-      border: realm.color,
-      accentColor: realm.color,
-    });
-    ctx.font = '28px sans-serif';
+    // 毛玻璃底板
+    ctx.save();
+    ctx.shadowColor = 'rgba(81,201,176,0.12)';
+    ctx.shadowBlur = 10;
+    ctx.shadowOffsetY = 2;
+    const pg = ctx.createLinearGradient(16, panelY, 16, panelY + 70);
+    pg.addColorStop(0, 'rgba(255,255,255,0.6)');
+    pg.addColorStop(1, 'rgba(255,255,255,0.35)');
+    ctx.fillStyle = pg;
+    this.roundRect(ctx, 16, panelY, w - 32, 70, 14);
+    ctx.fill();
+    ctx.restore();
+    // 边框
+    ctx.strokeStyle = 'rgba(112,232,208,0.3)';
+    ctx.lineWidth = 1.2;
+    this.roundRect(ctx, 16, panelY, w - 32, 70, 14);
+    ctx.stroke();
+    // 境界名称
+    ctx.font = `bold ${Theme.fonts.sizes.body}px ${Theme.fonts.primary}`;
+    ctx.fillStyle = '#3D6B4F';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
-    ctx.fillText(realm.icon, 30, panelY + 38);
-    ctx.font = `bold ${Theme.fonts.sizes.body}px ${Theme.fonts.primary}`;
-    ctx.fillStyle = Theme.colors.text.green;
-    ctx.fillText(realm.name, 66, panelY + 28);
+    ctx.fillText(realm.name, 30, panelY + 28);
+    // 境界描述
     ctx.font = `${Theme.fonts.sizes.small}px ${Theme.fonts.primary}`;
-    ctx.fillStyle = Theme.colors.text.secondary;
-    ctx.fillText(realm.desc, 66, panelY + 50);
+    ctx.fillStyle = 'rgba(61,107,79,0.6)';
+    ctx.fillText(realm.desc, 30, panelY + 50);
 
     const totalStages = realm.endStage - realm.startStage + 1;
     const nodeSize = Math.min(64, (w - 48) / 4);
@@ -385,68 +431,109 @@ export class LevelSelect extends BaseScene {
     }
   }
 
-  /** 灵叶关卡节点 */
+  /** 关卡节点 — 随机马卡龙色圆角方形 + 3D立体 */
   drawLeafNode(ctx, x, y, size, opts) {
     const cx = x + size / 2;
     const cy = y + size / 2;
     const r = size / 2 - 2;
 
+    // 用 index 做种子，保证每个节点颜色固定
+    const palettes = [
+      ['#BCF6E7', '#51C9B0', 'rgba(56,168,144,0.5)'],
+      ['#FFE89C', '#F5C842', 'rgba(200,160,40,0.4)'],
+      ['#FFC8DD', '#FF9BB5', 'rgba(220,120,150,0.4)'],
+      ['#C8E6FF', '#7CB9E8', 'rgba(100,150,200,0.4)'],
+      ['#E8D5F5', '#C4A8E0', 'rgba(160,120,180,0.4)'],
+      ['#FFD5C8', '#FFAA88', 'rgba(210,140,100,0.4)'],
+      ['#D5F5E3', '#82D9A0', 'rgba(80,160,100,0.4)'],
+    ];
+    const pal = palettes[opts.index % palettes.length];
+    const [topC, botC, borderC] = pal;
+
     ctx.save();
     if (opts.isLocked) ctx.globalAlpha = 0.35;
 
-    // 当前关光晕
+    // 当前关脉冲光晕
     if (opts.isCurrent) {
       ctx.globalAlpha = 1;
-      ctx.shadowColor = opts.realmColor || Theme.colors.accent.green;
-      ctx.shadowBlur = 16;
-      ctx.strokeStyle = opts.realmColor || Theme.colors.accent.green;
+      const pulse = 14 + Math.sin((this.animTime || 0) * 3) * 4;
+      ctx.shadowColor = '#fbbf24';
+      ctx.shadowBlur = pulse;
+      ctx.strokeStyle = '#fbbf24';
       ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.arc(cx, cy, r + 3, 0, Math.PI * 2);
+      this.roundRect(ctx, cx - r - 3, cy - r - 3, r * 2 + 6, r * 2 + 6, r * 0.35);
       ctx.stroke();
       ctx.shadowBlur = 0;
     }
 
-    // 节点底 — 翡翠绿渐变
-    const bg = ctx.createRadialGradient(cx, cy - r * 0.2, r * 0.1, cx, cy, r);
-    bg.addColorStop(0, '#d1fae5');
-    bg.addColorStop(1, '#a7f3d0');
-    ctx.fillStyle = bg;
-    ctx.beginPath();
-    ctx.arc(cx, cy, r, 0, Math.PI * 2);
-    ctx.fill();
+    // 圆角方形节点底色
+    const nodeX = cx - r;
+    const nodeY = cy - r;
+    const cornerR = r * 0.32;
 
-    // 边框
-    ctx.lineWidth = 2.5;
+    // 外发光（悬浮感）
+    ctx.shadowColor = topC;
+    ctx.shadowBlur = opts.isCurrent ? 12 : 6;
+    const bg = ctx.createLinearGradient(nodeX, nodeY, nodeX, nodeY + r * 2);
+    bg.addColorStop(0, topC);
+    bg.addColorStop(1, botC);
+    ctx.fillStyle = bg;
+    this.roundRect(ctx, nodeX, nodeY, r * 2, r * 2, cornerR);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // 描边
+    ctx.lineWidth = 1.5;
     if (opts.isCompleted) {
       ctx.strokeStyle = Theme.colors.accent.green;
       ctx.shadowColor = Theme.colors.accent.green;
-      ctx.shadowBlur = 8;
+      ctx.shadowBlur = 6;
     } else if (opts.isCurrent) {
-      ctx.strokeStyle = opts.realmColor || '#059669';
+      ctx.strokeStyle = '#fbbf24';
     } else if (opts.isLocked) {
       ctx.strokeStyle = 'rgba(6,78,59,0.12)';
     } else {
-      ctx.strokeStyle = 'rgba(5,150,105,0.40)';
+      ctx.strokeStyle = borderC;
     }
-    ctx.beginPath();
-    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    this.roundRect(ctx, nodeX, nodeY, r * 2, r * 2, cornerR);
     ctx.stroke();
     ctx.shadowBlur = 0;
 
-    // 叶子 + 关卡号
-    ctx.font = `${size * 0.32}px sans-serif`;
+    // 3D立体感：裁剪后绘制高光+阴影
+    ctx.save();
+    this.roundRect(ctx, nodeX, nodeY, r * 2, r * 2, cornerR);
+    ctx.clip();
+    // 左上高光
+    ctx.globalAlpha = 0.4;
+    const hlGrad = ctx.createRadialGradient(cx - r * 0.25, cy - r * 0.3, 0, cx - r * 0.25, cy - r * 0.3, r * 0.6);
+    hlGrad.addColorStop(0, '#ffffff');
+    hlGrad.addColorStop(0.5, 'rgba(255,255,255,0.2)');
+    hlGrad.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = hlGrad;
+    ctx.fillRect(nodeX, nodeY, r * 2, r * 2);
+    // 底部内阴影
+    ctx.globalAlpha = 1;
+    const innerS = ctx.createLinearGradient(0, cy + r * 0.3, 0, cy + r);
+    innerS.addColorStop(0, 'rgba(0,0,0,0)');
+    innerS.addColorStop(1, 'rgba(0,60,50,0.08)');
+    ctx.fillStyle = innerS;
+    ctx.fillRect(nodeX, nodeY, r * 2, r * 2);
+    ctx.restore();
+
+    // 关卡号（带投影）
+    ctx.font = `bold ${size * 0.3}px ${Theme.fonts.primary}`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('🍃', cx, cy - size * 0.12);
+    ctx.fillStyle = 'rgba(0,0,0,0.06)';
+    ctx.fillText(`${opts.index}`, cx, cy + 2);
+    ctx.fillStyle = opts.isCompleted ? Theme.colors.text.green : '#18594B';
+    ctx.fillText(`${opts.index}`, cx, cy);
 
-    ctx.font = `bold ${size * 0.24}px ${Theme.fonts.primary}`;
-    ctx.fillStyle = opts.isCompleted ? Theme.colors.text.green : Theme.colors.text.primary;
-    ctx.fillText(`${opts.index}`, cx, cy + size * 0.18);
-
+    // 完成对勾
     if (opts.isCompleted) {
-      ctx.font = `${size * 0.2}px sans-serif`;
-      ctx.fillText('⭐', cx + r * 0.55, cy - r * 0.55);
+      ctx.font = `bold ${size * 0.22}px sans-serif`;
+      ctx.fillStyle = '#059669';
+      ctx.fillText('✓', cx + r * 0.5, cy - r * 0.5);
     }
 
     ctx.restore();

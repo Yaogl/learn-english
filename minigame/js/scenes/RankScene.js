@@ -67,6 +67,11 @@ export class RankScene extends BaseScene {
     this.drawPageBackground(ctx, w, h);
     this.buttons = [];
 
+    // 返回按钮
+    this.drawBackButton(ctx, 10, 10, () => {
+      this.manager.switchTo('mainMenu');
+    });
+
     const headerBottom = this._renderHeader(ctx, w);
     const tabBottom = this._renderTabBar(ctx, w, headerBottom);
     const sortedList = this._getSortedList();
