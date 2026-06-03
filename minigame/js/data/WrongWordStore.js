@@ -1,6 +1,8 @@
 /**
- * 错题本本地存储（不依赖云开发）
+ * 错题本 — 本地存储 + 云同步
  */
+import { CloudService } from '../services/CloudService';
+
 const STORAGE_KEY = 'wrong_words';
 
 function normalizeList(data) {
@@ -24,14 +26,27 @@ export function loadWrongWords() {
   }
 }
 
-/** 保存错题列表 */
+/** 保存错题列表（本地 + 云同步） */
 export function saveWrongWords(list) {
   try {
     wx.setStorageSync(STORAGE_KEY, list);
+    _syncToCloud(list);
     return true;
   } catch (e) {
     console.warn('[WrongWordStore] 保存失败', e);
     return false;
+  }
+}
+
+/** 后台同步到云端（静默） */
+async function _syncToCloud(list) {
+  try {
+    if (!CloudService.isAvailable()) return;
+    const openid = await CloudService.getOpenid();
+    if (!openid) return;
+    await CloudService.updateWrongWords(openid, list);
+  } catch (e) {
+    console.warn('[WrongWordStore] 云同步失败', e);
   }
 }
 

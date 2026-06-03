@@ -44,20 +44,7 @@ export class ParentScene extends BaseScene {
 
   /** 森林背景 + 轻蒙层 */
   _drawBg(ctx, w, h) {
-    ctx.fillStyle = '#FFF9E8';
-    ctx.fillRect(0, 0, w, h);
-    if (this._bgImg && this._bgImg.width > 0) {
-      const img = this._bgImg;
-      const imgR = img.width / img.height;
-      const scrR = w / h;
-      let sx, sy, sw, sh;
-      if (imgR > scrR) { sh = img.height; sw = sh * scrR; sx = (img.width - sw) / 2; sy = 0; }
-      else { sw = img.width; sh = sw / scrR; sx = 0; sy = (img.height - sh) / 2; }
-      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, w, h);
-    }
-    ctx.fillStyle = 'rgba(255,249,232,0.2)';
-    ctx.fillRect(0, 0, w, h);
-    this.drawFallingPetals(ctx, w, h);
+    this.drawImageBackground(ctx, w, h, this._bgImg);
   }
 
   render(ctx, w, h) {
@@ -78,8 +65,8 @@ export class ParentScene extends BaseScene {
     ctx.textBaseline = 'middle';
     const pulse = 0.85 + Math.sin(t * 2) * 0.15;
     ctx.font = `bold ${Theme.fonts.sizes.title}px ${Theme.fonts.primary}`;
-    ctx.fillStyle = '#3D6B4F';
-    ctx.shadowColor = '#70E8D0';
+    ctx.fillStyle = Theme.colors.text.forest;
+    ctx.shadowColor = Theme.colors.accent.cyan;
     ctx.shadowBlur = 10 * pulse;
     ctx.fillText('家长面板', w / 2, titleY);
     ctx.shadowBlur = 0;
@@ -108,7 +95,7 @@ export class ParentScene extends BaseScene {
     ctx.stroke();
 
     ctx.font = `bold ${Theme.fonts.sizes.body}px ${Theme.fonts.primary}`;
-    ctx.fillStyle = '#3D6B4F';
+    ctx.fillStyle = Theme.colors.text.forest;
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
     ctx.fillText(CultivationSystem.getFullLabel(this.stats.totalStages || 0), 36, realmCardY + 28);
@@ -177,7 +164,7 @@ export class ParentScene extends BaseScene {
 
       // 数值
       ctx.font = `bold 22px ${Theme.fonts.primary}`;
-      ctx.fillStyle = '#3D6B4F';
+      ctx.fillStyle = Theme.colors.text.forest;
       ctx.textAlign = 'left';
       ctx.textBaseline = 'middle';
       ctx.fillText(stat.value, x + 18, y + 30);
@@ -211,7 +198,7 @@ export class ParentScene extends BaseScene {
     ctx.stroke();
 
     ctx.font = `bold 14px ${Theme.fonts.primary}`;
-    ctx.fillStyle = '#3D6B4F';
+    ctx.fillStyle = Theme.colors.text.forest;
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
     ctx.fillText('本周学习趋势', 35, calY + 22);

@@ -1,98 +1,116 @@
 /**
- * 主题配置 — 对齐 Web 原型滢滢知语（暖米色 + 翡翠绿 + 琥珀金）
+ * 主题配置 — Q版仙侠卡通风
+ * 水墨天色 · 金丹暖金 · 玉色灵气 · 卡通描边
  */
 export const Theme = {
   colors: {
     background: {
-      // 暖米色渐变（替代深紫）
-      gradient: ['#fffadf', '#fff8e1', '#fffadf'],
-      overlay: 'rgba(255,250,223,0.45)',
-      base: '#fffadf',
+      gradient: ['#dce9f8', '#f5f0e8', '#fff0d4'],
+      sky: '#dce9f8',
+      ground: '#fff0d4',
+      overlay: 'rgba(255,240,212,0.35)',
+      base: '#f5f0e8',
+      fallback: '#fff5e4',
+      imageOverlay: 'rgba(255,245,228,0.22)',
     },
 
     accent: {
-      gold: '#d4a017',
-      goldDark: '#b8860b',
-      green: '#059669',
-      greenLight: '#abf4ac',
+      gold: '#f0b429',
+      goldDark: '#c8870a',
+      goldLight: '#ffe082',
+      green: '#28a86e',
+      greenLight: '#7ddea8',
+      jade: '#3cb178',
       amber: '#f59e0b',
       pink: '#f472b6',
-      cyan: '#06b6d4',
-      lavender: '#a78bfa',
+      cyan: '#38bdf8',
+      lavender: '#9b7fd4',
+      cinnabar: '#e05a4a',
+      spirit: '#a78bfa',
     },
 
-    glass: 'rgba(255,255,255,0.60)',
+    outline: {
+      dark: '#4a3728',
+      soft: 'rgba(74,55,40,0.25)',
+      ink: '#3d2f1a',
+    },
+
+    glass: 'rgba(255,252,245,0.72)',
 
     card: {
-      bgTop: 'rgba(255,255,255,0.75)',
-      bgBottom: 'rgba(255,255,255,0.55)',
-      border: 'rgba(6,78,59,0.15)',
-      borderMuted: 'rgba(6,78,59,0.10)',
-      shadow: 'rgba(6,78,59,0.08)',
-      jade: '#c0c9bc',
+      bgTop: 'rgba(255,252,245,0.88)',
+      bgBottom: 'rgba(255,245,228,0.78)',
+      border: 'rgba(74,55,40,0.18)',
+      borderMuted: 'rgba(74,55,40,0.12)',
+      shadow: 'rgba(74,55,40,0.10)',
+      jade: '#b8d4c0',
+      goldTrim: 'rgba(240,180,41,0.55)',
     },
 
     button: {
-      gold: '#d4a017',
-      primary: '#059669',
+      gold: '#f0b429',
+      primary: '#28a86e',
+      primaryDark: '#1a7a50',
       secondary: '#f59e0b',
-      danger: '#ef4444',
-      info: '#0284c7',
-      purple: '#7c3aed',
-      muted: 'rgba(255,255,255,0.60)',
+      danger: '#e05a4a',
+      info: '#38bdf8',
+      purple: '#9b7fd4',
+      muted: 'rgba(255,252,245,0.85)',
+      shadow: 'rgba(74,55,40,0.22)',
     },
 
     text: {
-      primary: '#1e1c00',
-      secondary: 'rgba(30,28,0,0.70)',
-      muted: 'rgba(30,28,0,0.45)',
-      dark: '#1e1c00',
-      gold: '#92700c',
-      green: '#065f46',
+      primary: '#3d2f1a',
+      secondary: 'rgba(61,47,26,0.72)',
+      muted: 'rgba(61,47,26,0.45)',
+      dark: '#3d2f1a',
+      gold: '#a06800',
+      green: '#1a6b45',
+      forest: '#4a6741',
       white: '#ffffff',
     },
 
     game: {
-      tileTop: '#d1fae5',
-      tileBottom: '#a7f3d0',
-      tileBorder: '#059669',
-      tileText: '#065f46',
-      slotEmpty: 'rgba(6,78,59,0.08)',
-      slotFilled: '#ecfdf5',
-      slotBorder: 'rgba(6,78,59,0.20)',
-      slotBar: 'rgba(255,250,223,0.90)',
+      tileTop: '#c8f0dc',
+      tileBottom: '#7ddea8',
+      tileBorder: '#28a86e',
+      tileOutline: '#1a6b45',
+      tileText: '#1a4a32',
+      slotEmpty: 'rgba(40,168,110,0.10)',
+      slotFilled: '#eefaf3',
+      slotBorder: 'rgba(40,168,110,0.28)',
+      slotBar: 'rgba(255,245,228,0.92)',
     },
 
     realm: {
-      mortal: '#059669',
-      qi: '#0284c7',
+      mortal: '#28a86e',
+      qi: '#38bdf8',
       foundation: '#06b6d4',
-      golden: '#d4a017',
+      golden: '#f0b429',
       nascent: '#f59e0b',
-      spirit: '#7c3aed',
-      void: '#6b7280',
-      body: '#ec4899',
+      spirit: '#9b7fd4',
+      void: '#8b9aab',
+      body: '#f472b6',
       mahayana: '#f97316',
-      tribulation: '#ef4444',
+      tribulation: '#e05a4a',
       earth: '#78716c',
-      heaven: '#d4a017',
+      heaven: '#f0b429',
     },
 
     menu: {
-      battle: '#ec4899',
-      levels: '#059669',
+      battle: '#e05a4a',
+      levels: '#28a86e',
       errorbook: '#f59e0b',
-      rank: '#0284c7',
-      globalRank: '#7c3aed',
+      rank: '#38bdf8',
+      globalRank: '#9b7fd4',
       parent: '#78716c',
     },
 
-    // 花瓣/粒子颜色（翡翠绿系）
-    petal: ['#f472b6', '#abf4ac', '#fcd34d', '#a78bfa', '#6ee7b7'],
+    petal: ['#f472b6', '#7ddea8', '#ffe082', '#c4b5fd', '#7dd3fc'],
+    qiSpark: ['#f0b429', '#7ddea8', '#c4b5fd', '#f472b6', '#38bdf8'],
   },
 
   fonts: {
-    // 圆润字体优先级：PingFang SC（iOS圆润）> Noto Sans SC（Android）> Microsoft YaHei
     primary: '"PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif',
     letter: '"Arial Rounded MT Bold", "Helvetica Rounded", "PingFang SC", sans-serif',
     sizes: { title: 26, header: 20, subtitle: 18, body: 16, caption: 14, small: 12 },
@@ -106,22 +124,31 @@ export const Theme = {
   },
 
   animation: {
-    button: { pressScale: 0.95, pressAlpha: 0.88 },
+    button: { pressScale: 0.94, pressAlpha: 0.90 },
   },
 
   spacing: { xs: 4, sm: 8, md: 12, lg: 16, xl: 20, xxl: 24 },
-  borderRadius: { sm: 4, md: 8, lg: 12, xl: 16, xxl: 20, full: 999 },
+  borderRadius: { sm: 6, md: 10, lg: 14, xl: 18, xxl: 22, full: 999 },
+
+  /** 卡通风描边宽度 */
+  cartoon: {
+    outlineWidth: 2,
+    outlineWidthLg: 2.5,
+    depthOffset: 3,
+  },
 
   shadows: {
-    md: { color: 'rgba(6,78,59,0.10)', blur: 10, offsetY: 4 },
-    glow: { color: 'rgba(5,150,105,0.30)', blur: 16, offsetY: 0 },
-    card: { color: 'rgba(179,229,252,0.20)', blur: 12, offsetY: 2 },
+    md: { color: 'rgba(74,55,40,0.14)', blur: 8, offsetY: 4 },
+    glow: { color: 'rgba(240,180,41,0.35)', blur: 18, offsetY: 0 },
+    card: { color: 'rgba(74,55,40,0.08)', blur: 14, offsetY: 3 },
+    cartoon: { color: 'rgba(74,55,40,0.28)', blur: 0, offsetY: 4 },
   },
 
   cultivation: {
-    spiritColors: ['#d4a017', '#06b6d4', '#a78bfa', '#f472b6', '#059669'],
-    star: 'rgba(30,28,0,0.15)',
-    mist: 'rgba(167,243,176,0.12)',
+    spiritColors: ['#f0b429', '#38bdf8', '#9b7fd4', '#f472b6', '#28a86e'],
+    star: 'rgba(61,47,26,0.18)',
+    mist: 'rgba(125,222,168,0.14)',
+    mountain: ['#8aab9a', '#6d8f7e', '#5a7a6a'],
   },
 };
 
@@ -141,4 +168,10 @@ export function clearShadow(ctx) {
 
 export function getRealmColor(i) {
   return Object.values(Theme.colors.realm)[i % 12];
+}
+
+export function createGradient(ctx, x0, y0, x1, y1, stops) {
+  const g = ctx.createLinearGradient(x0, y0, x1, y1);
+  stops.forEach(([pos, color]) => g.addColorStop(pos, color));
+  return g;
 }

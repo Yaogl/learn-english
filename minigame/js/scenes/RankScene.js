@@ -1,10 +1,10 @@
 import { BaseScene } from './BaseScene';
 import { CultivationSystem } from '../data/CultivationSystem';
+import { CloudService } from '../services/CloudService';
 import { Theme } from '../theme.js';
 
 /**
- * 排行榜 — 对齐参考项目 RankingBoard.tsx
- * 奖杯头部 + 双标签 + 领奖台 + 列表 + 底部个人信息
+ * 排行榜 — 云端数据 + 本地兜底
  */
 export class RankScene extends BaseScene {
   constructor() {
@@ -20,11 +20,60 @@ export class RankScene extends BaseScene {
   onEnter() {
     super.onEnter();
     this.rankList = this.loadRankData();
+    this._injectSelf();
     this.tab = 'friends';
     this.scrollY = 0;
     this.maxScrollY = 0;
     this._loadUserAvatar();
     this._loadRankAvatars();
+    // 异步从云端拉取最新排行榜
+    this._fetchCloudRankings();
+  }
+
+  /** 从云端拉取排行榜数据（静默） */
+  async _fetchCloudRankings() {
+    try {
+      if (!CloudService.isAvailable()) return;
+      const cloudList = await CloudService.getRankings('stages', 50);
+      if (cloudList && cloudList.length > 0) {
+        // 合并云端数据：云端为主，保留本地 isSelf 条目
+        const selfEntry = this.rankList.find(p => p.isSelf);
+        this.rankList = cloudList.map(p => ({
+          name: p.name || '匿名',
+          avatarUrl: p.avatarUrl || '',
+          stages: p.completedStages || p.totalStages || 0,
+          words: p.totalWords || 0,
+          streak: p.streak || 0,
+          isSelf: false,
+        }));
+        // 把自己加回去
+        if (selfEntry) {
+          this.rankList = this.rankList.filter(p => !p.isSelf);
+          this.rankList.push(selfEntry);
+        }
+        this._loadRankAvatars();
+      }
+    } catch (e) {
+      console.warn('[RankScene] 云端排行榜拉取失败，使用本地数据', e);
+    }
+  }
+
+  /** 把自己的数据注入排行榜（标记 isSelf） */
+  _injectSelf() {
+    try {
+      const stats = JSON.parse(wx.getStorageSync('player_stats') || '{}');
+      const userInfo = JSON.parse(wx.getStorageSync('user_info') || '{}');
+      const selfData = {
+        name: userInfo.nickName || '灵语行者',
+        avatarUrl: userInfo.avatarUrl || '',
+        stages: stats.totalStages || 0,
+        words: stats.totalWords || 0,
+        streak: stats.streak || 0,
+        isSelf: true,
+      };
+      this.rankList = this.rankList.filter(p => !p.isSelf);
+      this.rankList.push(selfData);
+    } catch (e) {}
   }
 
   _loadUserAvatar() {
@@ -89,17 +138,12 @@ export class RankScene extends BaseScene {
     ctx.save();
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    // 奖杯
     ctx.font = '36px sans-serif';
     ctx.fillText('🏆', w / 2, y);
-    // 标题
-    ctx.font = `bold ${Theme.fonts.sizes.header}px ${Theme.fonts.primary}`;
-    ctx.fillStyle = Theme.colors.text.primary;
-    ctx.fillText('全服封神榜', w / 2, y + 38);
-    // 赛季副标题
+    this.drawTitle(ctx, '全服封神榜', w / 2, y + 38, Theme.fonts.sizes.header, 'gradient');
     ctx.font = `10px ${Theme.fonts.primary}`;
     ctx.fillStyle = Theme.colors.text.muted;
-    ctx.fillText('翠竹入梦赛季 ✦ Season of the Whispering Bamboo', w / 2, y + 58);
+    ctx.fillText('金丹赛季 ✦ Season of the Golden Core', w / 2, y + 58);
     ctx.restore();
     return y + 76;
   }
@@ -115,7 +159,7 @@ export class RankScene extends BaseScene {
 
     ctx.save();
     // 背景胶囊
-    ctx.fillStyle = 'rgba(251,191,36,0.12)';
+    ctx.fillStyle = 'rgba(240,180,41,0.14)';
     this.roundRect(ctx, startX - 8, y - 4, w - 44, tabH + 8, (tabH + 8) / 2);
     ctx.fill();
 

@@ -1,5 +1,7 @@
 import { BaseScene } from './BaseScene';
 import { Theme } from '../theme.js';
+import { CultivationSystem } from '../data/CultivationSystem';
+import { loadCompletedStages, getMaxCompletedStage } from '../data/ProgressStore.js';
 
 /**
  * 首页 — 炫酷修仙风
@@ -260,13 +262,13 @@ export class MainMenu extends BaseScene {
     const gridTop = gridBottom - gridH;
     const mainBtnY = gridTop - mainBtnGap - mainBtnH;
 
-    // 底部渐变遮罩（轻薄，不遮挡太多背景）
-    const maskTop = mainBtnY - 30;
+    // 底部渐变遮罩
+    const maskTop = mainBtnY - 40;
     const maskGrad = ctx.createLinearGradient(0, maskTop, 0, h);
-    maskGrad.addColorStop(0, 'rgba(255,250,223,0)');
-    maskGrad.addColorStop(0.25, 'rgba(255,250,223,0.50)');
-    maskGrad.addColorStop(0.6, 'rgba(255,250,223,0.75)');
-    maskGrad.addColorStop(1, 'rgba(255,250,223,0.88)');
+    maskGrad.addColorStop(0, 'rgba(245,240,232,0)');
+    maskGrad.addColorStop(0.2, 'rgba(255,245,228,0.55)');
+    maskGrad.addColorStop(0.55, 'rgba(255,240,212,0.82)');
+    maskGrad.addColorStop(1, 'rgba(255,235,200,0.92)');
     ctx.fillStyle = maskGrad;
     ctx.fillRect(0, maskTop, w, h - maskTop);
 
@@ -297,83 +299,83 @@ export class MainMenu extends BaseScene {
       });
     }
 
-    // --- 底部境界信息条 ---
+    // 底部境界信息条
     const infoY = gridBottom + 6;
     const infoW = w - padX * 2;
     const infoH = 28;
     const infoX = padX;
     ctx.save();
-    ctx.fillStyle = 'rgba(6,78,59,0.06)';
+    this._drawCartoonDepth(ctx, infoX, infoY + 2, infoW, infoH, 14, Theme.colors.button.shadow);
+    ctx.fillStyle = Theme.colors.glass;
     this.roundRect(ctx, infoX, infoY, infoW, infoH, 14);
     ctx.fill();
+    ctx.strokeStyle = Theme.colors.outline.soft;
+    ctx.lineWidth = Theme.cartoon.outlineWidth;
+    this.roundRect(ctx, infoX, infoY, infoW, infoH, 14);
+    ctx.stroke();
+    // 动态读取实际修行境界
+    const stages = loadCompletedStages();
+    const maxStage = getMaxCompletedStage(stages);
+    const realmLabel = CultivationSystem.getFullLabel(maxStage);
+
     ctx.font = `bold 10px ${Theme.fonts.primary}`;
     ctx.fillStyle = Theme.colors.text.muted;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('🌿 当前修行境界：筑基 - 第 4 关', w / 2, infoY + infoH / 2);
+    ctx.fillText(`⚡ 当前修行境界：${realmLabel}`, w / 2, infoY + infoH / 2);
     ctx.restore();
   }
 
-  /** 绘制胶囊按钮（带呼吸光效） */
+  /** Q版卡通胶囊按钮（3D 描边 + 高光） */
   _drawPillButton(ctx, x, y, w, h, icon, label, isPrimary, t) {
     ctx.save();
     const r = h / 2;
+    const depth = Theme.cartoon.depthOffset;
 
-    // 呼吸光效（主按钮）
     if (isPrimary) {
-      const glowPulse = 0.12 + Math.sin((t || 0) * 2) * 0.08;
+      const glowPulse = 0.15 + Math.sin((t || 0) * 2) * 0.08;
       ctx.globalAlpha = glowPulse;
-      ctx.fillStyle = '#abf4ac';
-      ctx.shadowColor = '#abf4ac';
-      ctx.shadowBlur = 20;
-      this.roundRect(ctx, x - 4, y - 4, w + 8, h + 8, r + 4);
+      ctx.fillStyle = Theme.colors.accent.goldLight;
+      ctx.shadowColor = Theme.colors.accent.gold;
+      ctx.shadowBlur = 22;
+      this.roundRect(ctx, x - 5, y - 5, w + 10, h + 10, r + 5);
       ctx.fill();
       ctx.globalAlpha = 1;
       ctx.shadowBlur = 0;
     }
 
-    // 阴影
-    ctx.shadowColor = isPrimary ? 'rgba(5,150,105,0.18)' : 'rgba(0,0,0,0.06)';
-    ctx.shadowBlur = isPrimary ? 10 : 5;
-    ctx.shadowOffsetY = 2;
+    this._drawCartoonDepth(ctx, x, y + depth, w, h, r, Theme.colors.button.shadow);
 
-    // 背景
     if (isPrimary) {
-      const grad = ctx.createLinearGradient(x, y, x + w, y);
-      grad.addColorStop(0, '#ecfdf5');
-      grad.addColorStop(0.5, '#d1fae5');
-      grad.addColorStop(1, '#ecfdf5');
+      const grad = ctx.createLinearGradient(x, y, x, y + h);
+      grad.addColorStop(0, '#5dd39e');
+      grad.addColorStop(0.5, Theme.colors.button.primary);
+      grad.addColorStop(1, Theme.colors.button.primaryDark);
       ctx.fillStyle = grad;
     } else {
-      ctx.fillStyle = 'rgba(255,255,255,0.88)';
+      ctx.fillStyle = Theme.colors.glass;
     }
     this.roundRect(ctx, x, y, w, h, r);
     ctx.fill();
-    ctx.shadowBlur = 0;
-    ctx.shadowOffsetY = 0;
 
-    // 边框
-    ctx.strokeStyle = isPrimary ? 'rgba(5,150,105,0.30)' : 'rgba(6,78,59,0.14)';
-    ctx.lineWidth = isPrimary ? 1.5 : 1;
+    ctx.strokeStyle = isPrimary ? Theme.colors.game.tileOutline : Theme.colors.outline.soft;
+    ctx.lineWidth = Theme.cartoon.outlineWidth;
     this.roundRect(ctx, x, y, w, h, r);
     ctx.stroke();
 
-    // 内部高光线
     ctx.save();
     ctx.clip();
     const highlightGrad = ctx.createLinearGradient(x, y, x, y + h);
-    highlightGrad.addColorStop(0, 'rgba(255,255,255,0.45)');
-    highlightGrad.addColorStop(0.5, 'rgba(255,255,255,0)');
+    highlightGrad.addColorStop(0, 'rgba(255,255,255,0.50)');
+    highlightGrad.addColorStop(0.45, 'rgba(255,255,255,0)');
     ctx.fillStyle = highlightGrad;
     ctx.fillRect(x, y, w, h / 2);
     ctx.restore();
 
-    // 图标 + 文字
     const fontSize = isPrimary ? 15 : 13;
-    ctx.font = `${fontSize}px sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    const iconW = ctx.measureText(icon).width;
+    const iconW = ctx.measureText(icon).width || fontSize;
     ctx.font = `bold ${fontSize}px ${Theme.fonts.primary}`;
     const labelW = ctx.measureText(label).width;
     const totalW = iconW + 8 + labelW;
@@ -383,7 +385,12 @@ export class MainMenu extends BaseScene {
     ctx.fillText(icon, startX + iconW / 2, y + h / 2);
 
     ctx.font = `bold ${fontSize}px ${Theme.fonts.primary}`;
-    ctx.fillStyle = Theme.colors.text.primary;
+    ctx.fillStyle = isPrimary ? Theme.colors.text.white : Theme.colors.text.primary;
+    if (isPrimary) {
+      ctx.shadowColor = 'rgba(0,0,0,0.12)';
+      ctx.shadowBlur = 2;
+      ctx.shadowOffsetY = 1;
+    }
     ctx.textAlign = 'left';
     ctx.fillText(label, startX + iconW + 8, y + h / 2);
 

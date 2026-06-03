@@ -5,7 +5,13 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const db = cloud.database();
 
 exports.main = async (event, context) => {
-  const { type = 'stages', limit = 50, openid } = event;
+  const { type, limit = 50, openid, action } = event;
+
+  // 获取当前用户openid
+  if (action === 'getSelf') {
+    const wxContext = cloud.getWXContext();
+    return { code: 0, openid: wxContext.OPENID };
+  }
 
   try {
     // 获取排行榜

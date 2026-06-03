@@ -48,7 +48,7 @@ export class BaseScene {
       const by = btn.y - this.scrollY;
       const isPressed = btn === this.pressedButton;
       const pressScale = isPressed ? Theme.animation.button.pressScale : 1;
-      const isGreen = btn.color === Theme.colors.button.primary || btn.color === '#059669';
+      const isGreen = btn.color === Theme.colors.button.primary || btn.color === '#28a86e' || btn.color === '#059669';
       const isGlass = !isGreen && (btn.color === Theme.colors.button.muted || (btn.color && String(btn.color).startsWith('rgba')));
 
       ctx.save();
@@ -62,31 +62,46 @@ export class BaseScene {
         ctx.translate(-cx, -cy);
       }
 
-      const r = Math.min(btn.h * 0.35, 16);
+      const r = Math.min(btn.h * 0.38, Theme.borderRadius.lg);
+      const depth = isPressed ? 1 : Theme.cartoon.depthOffset;
+
       if (isGlass) {
-        // 白色毛玻璃按钮
-        ctx.fillStyle = 'rgba(255,255,255,0.60)';
+        this._drawCartoonDepth(ctx, btn.x, by + depth, btn.w, btn.h, r, Theme.colors.button.shadow);
+        ctx.fillStyle = Theme.colors.button.muted;
         this.roundRect(ctx, btn.x, by, btn.w, btn.h, r);
         ctx.fill();
-        ctx.strokeStyle = Theme.colors.card.border;
-        ctx.lineWidth = 1;
+        ctx.strokeStyle = Theme.colors.outline.soft;
+        ctx.lineWidth = Theme.cartoon.outlineWidth;
         this.roundRect(ctx, btn.x, by, btn.w, btn.h, r);
         ctx.stroke();
       } else {
-        const grad = ctx.createLinearGradient(btn.x, by, btn.x + btn.w, by + btn.h);
+        this._drawCartoonDepth(ctx, btn.x, by + depth, btn.w, btn.h, r, Theme.colors.button.shadow);
+        const grad = ctx.createLinearGradient(btn.x, by, btn.x, by + btn.h);
         if (isGreen) {
-          grad.addColorStop(0, '#34d399');
-          grad.addColorStop(1, '#059669');
-          applyShadow(ctx, Theme.shadows.glow);
+          grad.addColorStop(0, '#5dd39e');
+          grad.addColorStop(0.5, Theme.colors.button.primary);
+          grad.addColorStop(1, Theme.colors.button.primaryDark);
         } else {
-          grad.addColorStop(0, this.lightenColor(btn.color, 15));
+          grad.addColorStop(0, this.lightenColor(btn.color, 18));
           grad.addColorStop(1, btn.color);
-          applyShadow(ctx, Theme.shadows.md);
         }
         ctx.fillStyle = grad;
         this.roundRect(ctx, btn.x, by, btn.w, btn.h, r);
         ctx.fill();
-        clearShadow(ctx);
+        ctx.strokeStyle = isGreen ? Theme.colors.game.tileOutline : Theme.colors.outline.dark;
+        ctx.lineWidth = Theme.cartoon.outlineWidth;
+        this.roundRect(ctx, btn.x, by, btn.w, btn.h, r);
+        ctx.stroke();
+        if (isGreen) {
+          ctx.save();
+          ctx.clip();
+          const hi = ctx.createLinearGradient(btn.x, by, btn.x, by + btn.h * 0.45);
+          hi.addColorStop(0, 'rgba(255,255,255,0.35)');
+          hi.addColorStop(1, 'rgba(255,255,255,0)');
+          ctx.fillStyle = hi;
+          ctx.fillRect(btn.x, by, btn.w, btn.h * 0.45);
+          ctx.restore();
+        }
       }
 
       if (!btn.label) { ctx.restore(); continue; }
@@ -95,9 +110,23 @@ export class BaseScene {
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillStyle = isGreen ? Theme.colors.text.white : Theme.colors.text.primary;
+      if (isGreen) {
+        ctx.shadowColor = 'rgba(0,0,0,0.15)';
+        ctx.shadowBlur = 2;
+        ctx.shadowOffsetY = 1;
+      }
       ctx.fillText(btn.label, btn.x + btn.w / 2, by + btn.h / 2);
       ctx.restore();
     }
+  }
+
+  /** 卡通风 3D 底部阴影层 */
+  _drawCartoonDepth(ctx, x, y, w, h, r, color) {
+    ctx.save();
+    ctx.fillStyle = color || Theme.colors.button.shadow;
+    this.roundRect(ctx, x, y, w, h, r);
+    ctx.fill();
+    ctx.restore();
   }
 
   lightenColor(color, percent) {
@@ -111,19 +140,105 @@ export class BaseScene {
     return `#${(1 << 24 | R << 16 | G << 8 | B).toString(16).slice(1)}`;
   }
 
-  /** 暖米色渐变背景 + 花瓣飘落 + 绿雾 + 灵气粒子 */
+  /** 水墨天色背景 + 远山剪影 + 灵气粒子 */
   drawPageBackground(ctx, w, h) {
     const g = ctx.createLinearGradient(0, 0, 0, h);
     const bg = Theme.colors.background.gradient;
     g.addColorStop(0, bg[0]);
-    g.addColorStop(0.5, bg[1]);
+    g.addColorStop(0.45, bg[1]);
     g.addColorStop(1, bg[2]);
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, w, h);
 
+    this._drawInkMountains(ctx, w, h);
+    this._drawCartoonClouds(ctx, w, h);
     this.drawFallingPetals(ctx, w, h);
     this.drawCloudMist(ctx, w, h);
     this.drawSpiritParticles(ctx, w, h);
+  }
+
+  /** 图片背景 + 统一蒙层（错题本/家长面板/关卡等复用） */
+  drawImageBackground(ctx, w, h, img) {
+    ctx.fillStyle = Theme.colors.background.fallback;
+    ctx.fillRect(0, 0, w, h);
+    if (img && img.width > 0) {
+      const imgR = img.width / img.height;
+      const scrR = w / h;
+      let sx, sy, sw, sh;
+      if (imgR > scrR) {
+        sh = img.height; sw = sh * scrR;
+        sx = (img.width - sw) / 2; sy = 0;
+      } else {
+        sw = img.width; sh = sw / scrR;
+        sx = 0; sy = (img.height - sh) / 2;
+      }
+      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, w, h);
+    }
+    ctx.fillStyle = Theme.colors.background.imageOverlay;
+    ctx.fillRect(0, 0, w, h);
+    this.drawFallingPetals(ctx, w, h);
+  }
+
+  /** 水墨远山剪影 */
+  _drawInkMountains(ctx, w, h) {
+    const t = this.animTime || 0;
+    const baseY = h * 0.72;
+    const peaks = [
+      { x: 0, w: w * 0.35, h: h * 0.18 },
+      { x: w * 0.22, w: w * 0.42, h: h * 0.26 },
+      { x: w * 0.55, w: w * 0.38, h: h * 0.20 },
+      { x: w * 0.78, w: w * 0.30, h: h * 0.15 },
+    ];
+    const colors = Theme.cultivation.mountain;
+    ctx.save();
+    peaks.forEach((p, i) => {
+      const drift = Math.sin(t * 0.15 + i) * 2;
+      ctx.fillStyle = colors[i % colors.length];
+      ctx.globalAlpha = 0.35 + i * 0.08;
+      ctx.beginPath();
+      ctx.moveTo(p.x + drift, baseY);
+      ctx.lineTo(p.x + p.w * 0.5 + drift, baseY - p.h);
+      ctx.lineTo(p.x + p.w + drift, baseY);
+      ctx.closePath();
+      ctx.fill();
+    });
+    ctx.restore();
+  }
+
+  /** Q版卡通祥云 */
+  _drawCartoonClouds(ctx, w, h) {
+    const t = this.animTime || 0;
+    const clouds = [
+      { x: w * 0.12, y: h * 0.14, s: 0.9 },
+      { x: w * 0.78, y: h * 0.10, s: 0.7 },
+      { x: w * 0.55, y: h * 0.22, s: 0.55 },
+    ];
+    clouds.forEach((c, i) => {
+      const drift = Math.sin(t * 0.2 + i * 1.5) * 8;
+      this._drawFluffyCloud(ctx, c.x + drift, c.y, c.s);
+    });
+  }
+
+  _drawFluffyCloud(ctx, x, y, scale) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(scale, scale);
+    ctx.fillStyle = 'rgba(255,255,255,0.75)';
+    ctx.strokeStyle = 'rgba(74,55,40,0.08)';
+    ctx.lineWidth = 1.5;
+    const blobs = [
+      { dx: 0, dy: 0, rx: 36, ry: 18 },
+      { dx: -28, dy: 6, rx: 24, ry: 14 },
+      { dx: 30, dy: 4, rx: 26, ry: 15 },
+      { dx: -10, dy: -8, rx: 20, ry: 12 },
+    ];
+    blobs.forEach(b => {
+      ctx.beginPath();
+      ctx.ellipse(b.dx, b.dy, b.rx, b.ry, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    });
+    ctx.restore();
   }
 
   drawSkyBackground(ctx, w, h) {
@@ -135,16 +250,17 @@ export class BaseScene {
     if (!this._petalInit) {
       this._petalInit = true;
       this.petals = [];
-      for (let i = 0; i < 14; i++) {
+      for (let i = 0; i < 16; i++) {
         this.petals.push({
           x: Math.random() * w,
-          size: 4 + Math.random() * 6,
-          speed: 30 + Math.random() * 40,
+          size: 3 + Math.random() * 5,
+          speed: 28 + Math.random() * 38,
           delay: Math.random() * 8,
-          drift: (Math.random() - 0.5) * 60,
+          drift: (Math.random() - 0.5) * 55,
           rot: Math.random() * Math.PI * 2,
           rotSpeed: (Math.random() - 0.5) * 2,
           color: Theme.colors.petal[i % Theme.colors.petal.length],
+          type: i % 4 === 0 ? 'spark' : 'petal',
         });
       }
     }
@@ -155,16 +271,29 @@ export class BaseScene {
       if (elapsed < 0) continue;
       const py = (elapsed * p.speed) % (h + 40) - 20;
       const px = p.x + Math.sin(t * 0.5 + p.delay) * p.drift;
-      const alpha = 0.35 + Math.sin(t * 0.8 + p.delay) * 0.15;
+      const alpha = 0.38 + Math.sin(t * 0.8 + p.delay) * 0.18;
       ctx.globalAlpha = alpha;
       ctx.fillStyle = p.color;
-      ctx.save();
-      ctx.translate(px, py);
-      ctx.rotate(p.rot + t * p.rotSpeed);
-      ctx.beginPath();
-      ctx.ellipse(0, 0, p.size, p.size * 1.5, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
+
+      if (p.type === 'spark') {
+        ctx.save();
+        ctx.translate(px, py);
+        ctx.rotate(p.rot + t * p.rotSpeed * 0.5);
+        ctx.shadowColor = p.color;
+        ctx.shadowBlur = 8;
+        const s = p.size * 0.8;
+        ctx.fillRect(-s * 2, -0.6, s * 4, 1.2);
+        ctx.fillRect(-0.6, -s * 2, 1.2, s * 4);
+        ctx.restore();
+      } else {
+        ctx.save();
+        ctx.translate(px, py);
+        ctx.rotate(p.rot + t * p.rotSpeed);
+        ctx.beginPath();
+        ctx.ellipse(0, 0, p.size, p.size * 1.4, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
     }
     ctx.restore();
   }
@@ -415,34 +544,54 @@ export class BaseScene {
 
   drawGlassPanel(ctx, x, y, w, h, opts = {}) {
     const r = opts.radius || Theme.borderRadius.lg;
+    const depth = Theme.cartoon.depthOffset;
     ctx.save();
+
+    this._drawCartoonDepth(ctx, x, y + depth, w, h, r, Theme.colors.card.shadow);
     applyShadow(ctx, Theme.shadows.card);
-    // 白色毛玻璃渐变
     const grad = ctx.createLinearGradient(x, y, x, y + h);
-    grad.addColorStop(0, opts.bgTop || 'rgba(255,255,255,0.75)');
-    grad.addColorStop(1, opts.bgBottom || 'rgba(255,255,255,0.55)');
+    grad.addColorStop(0, opts.bgTop || Theme.colors.card.bgTop);
+    grad.addColorStop(1, opts.bgBottom || Theme.colors.card.bgBottom);
     ctx.fillStyle = grad;
     this.roundRect(ctx, x, y, w, h, r);
     ctx.fill();
     clearShadow(ctx);
-    // 翡翠绿细边框
+
     ctx.strokeStyle = opts.border || Theme.colors.card.border;
-    ctx.lineWidth = 1.5;
+    ctx.lineWidth = Theme.cartoon.outlineWidth;
     this.roundRect(ctx, x, y, w, h, r);
     ctx.stroke();
-    // 玉石化内阴影
+
     ctx.save();
     ctx.clip();
-    ctx.strokeStyle = 'rgba(255,255,255,0.50)';
-    ctx.lineWidth = 2;
-    this.roundRect(ctx, x + 1, y + 1, w - 2, h - 2, r);
-    ctx.stroke();
+    const hi = ctx.createLinearGradient(x, y, x, y + h * 0.4);
+    hi.addColorStop(0, 'rgba(255,255,255,0.55)');
+    hi.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = hi;
+    ctx.fillRect(x, y, w, h * 0.4);
     ctx.restore();
+
     if (opts.accentColor) {
       ctx.fillStyle = opts.accentColor;
-      this.roundRectTop(ctx, x, y, w, 3, r);
+      this.roundRectTop(ctx, x, y, w, 4, r);
       ctx.fill();
     }
+
+    this._drawGoldCornerDots(ctx, x, y, w, h, r);
+    ctx.restore();
+  }
+
+  /** 四角金丹装饰点 */
+  _drawGoldCornerDots(ctx, x, y, w, h, r) {
+    const pad = 8;
+    const dotR = 2.5;
+    ctx.save();
+    ctx.fillStyle = Theme.colors.card.goldTrim;
+    [[x + pad, y + pad], [x + w - pad, y + pad], [x + pad, y + h - pad], [x + w - pad, y + h - pad]].forEach(([cx, cy]) => {
+      ctx.beginPath();
+      ctx.arc(cx, cy, dotR, 0, Math.PI * 2);
+      ctx.fill();
+    });
     ctx.restore();
   }
 
@@ -494,17 +643,19 @@ export class BaseScene {
     }
     ctx.closePath();
 
-    // 翡翠绿渐变（替代深紫）
     const g = ctx.createLinearGradient(-r, -r * 0.8, r, r);
-    g.addColorStop(0, opts.topColor || '#d1fae5');
-    g.addColorStop(0.5, '#a7f3d0');
-    g.addColorStop(1, opts.bottomColor || '#6ee7b7');
+    g.addColorStop(0, opts.topColor || Theme.colors.game.tileTop);
+    g.addColorStop(0.5, Theme.colors.game.tileBottom);
+    g.addColorStop(1, opts.bottomColor || '#5dd39e');
     ctx.fillStyle = g;
     ctx.fill();
 
     ctx.shadowBlur = 0;
+    ctx.strokeStyle = opts.borderColor || Theme.colors.game.tileOutline;
+    ctx.lineWidth = opts.borderWidth || 2.5;
+    ctx.stroke();
     ctx.strokeStyle = opts.borderColor || Theme.colors.game.tileBorder;
-    ctx.lineWidth = opts.borderWidth || 2;
+    ctx.lineWidth = 1;
     ctx.stroke();
 
     // 高光
@@ -564,17 +715,17 @@ export class BaseScene {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     if (color === 'gradient') {
-      // 翡翠绿渐变标题
-      const g = ctx.createLinearGradient(x - 90, y, x + 90, y);
-      g.addColorStop(0, '#059669');
-      g.addColorStop(0.5, '#d4a017');
-      g.addColorStop(1, '#065f46');
+      const g = ctx.createLinearGradient(x - 100, y, x + 100, y);
+      g.addColorStop(0, Theme.colors.text.green);
+      g.addColorStop(0.35, Theme.colors.accent.gold);
+      g.addColorStop(0.65, Theme.colors.accent.lavender);
+      g.addColorStop(1, Theme.colors.text.green);
       ctx.fillStyle = g;
-      ctx.shadowColor = 'rgba(5,150,105,0.35)';
-      ctx.shadowBlur = 12;
+      ctx.shadowColor = 'rgba(240,180,41,0.40)';
+      ctx.shadowBlur = 14;
     } else {
       ctx.fillStyle = color || Theme.colors.text.primary;
-      ctx.shadowColor = 'rgba(30,28,0,0.15)';
+      ctx.shadowColor = 'rgba(74,55,40,0.12)';
       ctx.shadowBlur = 4;
     }
     ctx.fillText(text, x, y);
@@ -634,15 +785,20 @@ export class BaseScene {
       const selected = selectedKey === tab.key;
 
       if (selected) {
+        this._drawCartoonDepth(ctx, x, y + 2, tabW, tabH, Theme.borderRadius.md, Theme.colors.button.shadow);
         const tabGrad = ctx.createLinearGradient(x, y, x, y + tabH);
-        tabGrad.addColorStop(0, '#34d399');
-        tabGrad.addColorStop(1, '#059669');
+        tabGrad.addColorStop(0, '#5dd39e');
+        tabGrad.addColorStop(1, Theme.colors.button.primary);
         ctx.fillStyle = tabGrad;
       } else {
-        ctx.fillStyle = 'rgba(255,255,255,0.50)';
+        ctx.fillStyle = Theme.colors.glass;
       }
       this.roundRect(ctx, x, y, tabW, tabH, Theme.borderRadius.md);
       ctx.fill();
+      ctx.strokeStyle = selected ? Theme.colors.game.tileOutline : Theme.colors.outline.soft;
+      ctx.lineWidth = Theme.cartoon.outlineWidth;
+      this.roundRect(ctx, x, y, tabW, tabH, Theme.borderRadius.md);
+      ctx.stroke();
 
       ctx.font = `bold ${Theme.fonts.sizes.body}px ${Theme.fonts.primary}`;
       ctx.fillStyle = selected ? Theme.colors.text.white : Theme.colors.text.secondary;
@@ -678,37 +834,39 @@ export class BaseScene {
   /** 故事卷轴面板（羊皮纸纹理风格） */
   drawStoryScroll(ctx, x, y, w, h) {
     ctx.save();
-    // 羊皮纸底色
-    ctx.fillStyle = '#FFF9C4';
-    this.roundRect(ctx, x, y, w, h, Theme.borderRadius.xl);
+    const r = Theme.borderRadius.xl;
+    this._drawCartoonDepth(ctx, x, y + 3, w, h, r, 'rgba(74,55,40,0.15)');
+    ctx.fillStyle = '#fff5d6';
+    this.roundRect(ctx, x, y, w, h, r);
     ctx.fill();
-    // 点状纹理
     ctx.save();
     ctx.clip();
-    ctx.globalAlpha = 0.3;
-    ctx.fillStyle = '#e0d6a0';
-    for (let px = x; px < x + w; px += 20) {
-      for (let py = y; py < y + h; py += 20) {
+    ctx.globalAlpha = 0.25;
+    ctx.fillStyle = '#d4c090';
+    for (let px = x; px < x + w; px += 18) {
+      for (let py = y; py < y + h; py += 18) {
         ctx.beginPath();
-        ctx.arc(px, py, 1, 0, Math.PI * 2);
+        ctx.arc(px, py, 0.8, 0, Math.PI * 2);
         ctx.fill();
       }
     }
     ctx.restore();
-    // 内阴影
     ctx.save();
     ctx.clip();
     const inset = ctx.createLinearGradient(x, y, x, y + h);
-    inset.addColorStop(0, 'rgba(186,170,114,0.25)');
-    inset.addColorStop(0.5, 'rgba(186,170,114,0)');
-    inset.addColorStop(1, 'rgba(186,170,114,0.25)');
+    inset.addColorStop(0, 'rgba(186,150,80,0.20)');
+    inset.addColorStop(0.5, 'rgba(186,150,80,0)');
+    inset.addColorStop(1, 'rgba(186,150,80,0.18)');
     ctx.fillStyle = inset;
     ctx.fillRect(x, y, w, h);
     ctx.restore();
-    // 翡翠绿边框
-    ctx.strokeStyle = Theme.colors.card.jade;
+    ctx.strokeStyle = Theme.colors.accent.goldDark;
     ctx.lineWidth = 2;
-    this.roundRect(ctx, x, y, w, h, Theme.borderRadius.xl);
+    this.roundRect(ctx, x, y, w, h, r);
+    ctx.stroke();
+    ctx.strokeStyle = Theme.colors.outline.soft;
+    ctx.lineWidth = 1;
+    this.roundRect(ctx, x + 3, y + 3, w - 6, h - 6, r - 2);
     ctx.stroke();
     ctx.restore();
   }

@@ -6,6 +6,7 @@ const CLOUD_ENV = 'cloud1-d7giehwchbc1527f3';
 
 let db = null;
 let initialized = false;
+let cachedOpenid = null;
 
 export class CloudService {
   /**
@@ -31,6 +32,21 @@ export class CloudService {
    */
   static isAvailable() {
     return initialized && db !== null;
+  }
+
+  /**
+   * 获取用户openid（缓存）
+   */
+  static async getOpenid() {
+    if (cachedOpenid) return cachedOpenid;
+    if (!this.isAvailable()) return null;
+    try {
+      const res = await wx.cloud.callFunction({ name: 'getRankings', data: { action: 'getSelf' } });
+      cachedOpenid = res.result?.openid || null;
+      return cachedOpenid;
+    } catch (e) {
+      return null;
+    }
   }
 
   // ==================== 单词数据 ====================

@@ -8,9 +8,13 @@ import { BattleScene } from './js/scenes/BattleScene';
 import { ParentScene } from './js/scenes/ParentScene';
 import { CloudService } from './js/services/CloudService';
 import { getShareConfig, parseLaunchQuery } from './js/services/ShareBridge.js';
+import { initAudio } from './js/services/AudioService';
 
 // 初始化云开发
 CloudService.init();
+
+// 初始化音频
+initAudio();
 
 // 分享菜单与转发卡片
 if (typeof wx.showShareMenu === 'function') {
@@ -39,8 +43,16 @@ function handleBattleInvite(query) {
 const canvas = wx.createCanvas();
 const ctx = canvas.getContext('2d');
 
-const W = canvas.width;
-const H = canvas.height;
+// 高清适配：获取设备像素比，设置 canvas 物理分辨率
+const sysInfo = wx.getSystemInfoSync();
+const dpr = sysInfo.pixelRatio || 2;
+const W = sysInfo.windowWidth;
+const H = sysInfo.windowHeight;
+// 设置 canvas 物理像素尺寸（高清）
+canvas.width = W * dpr;
+canvas.height = H * dpr;
+// 缩放上下文，使逻辑坐标与物理像素对齐
+ctx.scale(dpr, dpr);
 
 const sceneManager = new SceneManager();
 sceneManager.register('mainMenu', new MainMenu());

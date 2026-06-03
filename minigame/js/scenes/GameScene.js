@@ -7,6 +7,7 @@ import {
 } from '../data/WrongWordStore.js';
 import { saveCompletedStage } from '../data/ProgressStore.js';
 import { Theme } from '../theme.js';
+import { playTap, playMatch, playWin, playLose, pronounceWord } from '../services/AudioService';
 
 /**
  * 闯关模式 - 核心玩法
@@ -221,9 +222,9 @@ export class GameScene extends BaseScene {
     if (this.state !== 'playing') return;
     this.state = 'win';
     this.winAnim = 0;
-    if (this.fromErrorBook && this.errorWord) {
-      removeWrongWord(this.errorWord.word);
-    } else {
+    playWin();
+    // 错题本通关不立即删除，等用户确认"记住了"
+    if (!this.fromErrorBook) {
       this.saveProgress();
     }
   }
@@ -250,15 +251,26 @@ export class GameScene extends BaseScene {
   }
 
   /**
-   * 生成平铺字母 - 单词字母重复铺满屏幕
-   * 例如单词 "got" → 屏幕铺满 g,o,t,g,o,t,g,o,t... 重复多次
-   * 孩子反复拼同一个单词，加深记忆
+   * 生成平铺字母 - 总数控制在50以内
+   * 根据单词字母总数动态计算重复次数
    */
   generateLetters() {
+    const MAX_LETTERS = 50;
     const allLetters = [];
 
-    // 每个单词的字母重复铺满（约15组）
-    const repeatCount = 15;
+    // 统计所有目标单词的字母总数
+    let totalUniqueChars = 0;
+    for (const word of this.targetStrings) {
+      totalUniqueChars += word.length;
+    }
+
+    // 干扰字母预留 5 个
+    const distractorCount = 5;
+    const targetBudget = MAX_LETTERS - distractorCount;
+
+    // 动态计算重复次数：确保总数不超过限制
+    const repeatCount = Math.max(1, Math.floor(targetBudget / totalUniqueChars));
+
     for (const word of this.targetStrings) {
       for (let r = 0; r < repeatCount; r++) {
         for (const char of word) {
@@ -267,13 +279,12 @@ export class GameScene extends BaseScene {
       }
     }
 
-    // 干扰字母：每局 4~5 个，且不与目标单词字母重复
+    // 干扰字母：不与目标单词字母重复
     const targetChars = new Set();
     for (const word of this.targetStrings) {
       for (const ch of word) targetChars.add(ch);
     }
     const pool = 'abcdefghijklmnopqrstuvwxyz'.split('').filter((c) => !targetChars.has(c));
-    const distractorCount = Math.min(pool.length, 4 + Math.floor(Math.random() * 2));
     for (let i = pool.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [pool[i], pool[j]] = [pool[j], pool[i]];
@@ -415,7 +426,7 @@ export class GameScene extends BaseScene {
       ctx.fillStyle = comboGrad;
       ctx.textAlign = 'center';
       // 双层发光：内层绿 + 外层薄荷
-      ctx.shadowColor = '#70E8D0';
+      ctx.shadowColor = Theme.colors.accent.greenLight;
       ctx.shadowBlur = 24;
       ctx.fillText(a.text, w / 2, h * 0.35 - t * 60);
       ctx.shadowBlur = 8;
@@ -469,6 +480,13 @@ export class GameScene extends BaseScene {
    */
   renderStory(ctx, w, h) {
     this.buttons = [];
+
+    // 返回按钮（深色底，在背景上清晰可见）
+    const back = Theme.layout.backBtn;
+    this.addButton(back.x, back.y, back.w, back.h, '← 返回', '#3D6B4F', () => {
+      this.manager.switchTo('levels');
+    });
+
     const layout = this._getStoryLayout(w, h);
     const { scrollW, scrollH, scrollX, scrollY, contentX, contentY, contentW, contentH } = layout;
     const story = (this.stageData.story || '').slice(0, this.storyTypedLen);
@@ -479,7 +497,7 @@ export class GameScene extends BaseScene {
     // ── 卷轴底板（发光草药图 + 蒙层）──
     ctx.save();
     // 卷轴外发光
-    ctx.shadowColor = '#70E8D0';
+    ctx.shadowColor = Theme.colors.accent.greenLight;
     ctx.shadowBlur = 16;
     ctx.shadowOffsetY = 4;
 
@@ -542,8 +560,8 @@ export class GameScene extends BaseScene {
     ctx.textAlign = 'center';
     const titlePulse = 0.85 + Math.sin(t * 2) * 0.15;
     ctx.font = `bold ${Theme.fonts.sizes.body + 2}px ${Theme.fonts.primary}`;
-    ctx.fillStyle = '#3D6B4F';
-    ctx.shadowColor = '#70E8D0';
+    ctx.fillStyle = Theme.colors.text.forest;
+    ctx.shadowColor = Theme.colors.accent.greenLight;
     ctx.shadowBlur = 10 * titlePulse;
     const storyTitle = this.fromErrorBook ? '心魔残影' : '天书残卷';
     ctx.fillText(storyTitle, w / 2, scrollY + 30);
@@ -562,7 +580,7 @@ export class GameScene extends BaseScene {
     ctx.textBaseline = 'top';
     ctx.textAlign = 'left';
     ctx.font = `${fontSize}px ${Theme.fonts.primary}`;
-    ctx.fillStyle = '#3D6B4F';
+    ctx.fillStyle = Theme.colors.text.forest;
     ctx.shadowColor = 'rgba(61,107,79,0.15)';
     ctx.shadowBlur = 4;
     const lines = this._buildStoryLines(ctx, story, contentW);
@@ -599,8 +617,8 @@ export class GameScene extends BaseScene {
       ctx.shadowBlur = 0;
       ctx.globalAlpha = cursorAlpha;
       // 光标光晕
-      ctx.fillStyle = '#70E8D0';
-      ctx.shadowColor = '#70E8D0';
+      ctx.fillStyle = Theme.colors.accent.greenLight;
+      ctx.shadowColor = Theme.colors.accent.greenLight;
       ctx.shadowBlur = 8;
       ctx.fillText('仙', cursorX, cursorY);
       ctx.shadowBlur = 0;
@@ -623,7 +641,7 @@ export class GameScene extends BaseScene {
 
     // 底部提示
     ctx.font = `14px ${Theme.fonts.primary}`;
-    ctx.fillStyle = '#3D6B4F';
+    ctx.fillStyle = Theme.colors.text.forest;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
     const hint = this.storyTypingDone ? '点击继续 · 进入记忆' : '点击加速显示全文';
@@ -644,7 +662,7 @@ export class GameScene extends BaseScene {
     const footerTop = h - 88;
 
     // 森林背景 + 轻蒙层
-    ctx.fillStyle = '#FFF9E8';
+    ctx.fillStyle = Theme.colors.background.fallback;
     ctx.fillRect(0, 0, w, h);
     if (this._bgImg && this._bgImg.width > 0) {
       const img = this._bgImg;
@@ -659,13 +677,6 @@ export class GameScene extends BaseScene {
     ctx.fillRect(0, 0, w, h);
     this.drawFallingPetals(ctx, w, h);
 
-    // 返回按钮
-    const back = Theme.layout.backBtn;
-    this.addButton(back.x, back.y, back.w, back.h, '← 返回', Theme.colors.button.muted, () => {
-      this.state = 'story';
-      this.animTime = 0;
-    });
-
     // 标题（深棕绿，带灵气光晕）
     const titleY = Theme.layout.safeTop + 10;
     ctx.save();
@@ -673,8 +684,8 @@ export class GameScene extends BaseScene {
     ctx.textBaseline = 'middle';
     const titlePulse = 0.85 + Math.sin(t * 2) * 0.15;
     ctx.font = `bold ${Theme.fonts.sizes.title}px ${Theme.fonts.primary}`;
-    ctx.fillStyle = '#3D6B4F';
-    ctx.shadowColor = '#70E8D0';
+    ctx.fillStyle = Theme.colors.text.forest;
+    ctx.shadowColor = Theme.colors.accent.greenLight;
     ctx.shadowBlur = 10 * titlePulse;
     ctx.fillText('凝神记忆', w / 2, titleY);
     ctx.shadowBlur = 0;
@@ -782,7 +793,7 @@ export class GameScene extends BaseScene {
 
       // 英文单词（大号，深棕绿）
       ctx.font = `bold ${Math.min(38, cardW * 0.2)}px ${Theme.fonts.primary}`;
-      ctx.fillStyle = '#3D6B4F';
+      ctx.fillStyle = Theme.colors.text.forest;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'top';
       ctx.fillText(tw.word, cx, lineY);
@@ -823,8 +834,12 @@ export class GameScene extends BaseScene {
       ctx.restore();
     }
 
-    // 底部按钮（渐变绿 + 发光）
+    // 按钮区
     this.buttons = [];
+    const back = Theme.layout.backBtn;
+    this.addButton(back.x, back.y, back.w, back.h, '← 返回', Theme.colors.button.muted, () => {
+      this.manager.switchTo(this.fromErrorBook ? 'errorbook' : 'levels');
+    });
     const btnW = Math.min(200, w - 48);
     const btnH = 48;
     const btnY = h - 72;
@@ -863,7 +878,7 @@ export class GameScene extends BaseScene {
   _initBgDots() {
     if (this.bgDots) return;
     this.bgDots = [];
-    const colors = ['#70E8D0', '#FFE89C', '#FFC8DD'];
+    const colors = [Theme.colors.accent.greenLight, '#FFE89C', '#FFC8DD'];
     for (let i = 0; i < 22; i++) {
       this.bgDots.push({
         xPct: Math.random(),
@@ -879,7 +894,7 @@ export class GameScene extends BaseScene {
 
   /** 仙气背景：仙气全景图 + 轻蒙层 + 浮动圆点 */
   _drawStoryBackground(ctx, w, h) {
-    ctx.fillStyle = '#FFF9E8';
+    ctx.fillStyle = Theme.colors.background.fallback;
     ctx.fillRect(0, 0, w, h);
     if (this._celestialBg && this._celestialBg.width > 0) {
       const img = this._celestialBg;
@@ -919,7 +934,7 @@ export class GameScene extends BaseScene {
   /** 背景图 + 白色蒙层 + 浮动半透明圆点（带微光晕） */
   _drawGameBackground(ctx, w, h) {
     // 底色
-    ctx.fillStyle = '#FFF9E8';
+    ctx.fillStyle = Theme.colors.background.fallback;
     ctx.fillRect(0, 0, w, h);
 
     // 背景图（cover 模式居中裁剪）
@@ -986,8 +1001,8 @@ export class GameScene extends BaseScene {
     // ── 顶部毛玻璃面板 ──
     const topY = Theme.layout.safeTop;
     const panelPadX = 16;
-    const panelPadY = 10;
-    const panelH = 60;
+    const panelPadY = 8;
+    const panelH = 52;
     const panelW = w - panelPadX * 2;
     const panelX = panelPadX;
     const panelY = topY - panelPadY;
@@ -1002,7 +1017,7 @@ export class GameScene extends BaseScene {
     // 外发光边框
     ctx.strokeStyle = 'rgba(112,232,208,0.35)';
     ctx.lineWidth = 1.5;
-    ctx.shadowColor = '#70E8D0';
+    ctx.shadowColor = Theme.colors.accent.greenLight;
     ctx.shadowBlur = 8;
     this.roundRect(ctx, panelX, panelY, panelW, panelH, 16);
     ctx.stroke();
@@ -1027,76 +1042,80 @@ export class GameScene extends BaseScene {
     ctx.textBaseline = 'middle';
     ctx.font = `bold ${Theme.fonts.sizes.header}px ${Theme.fonts.primary}`;
     // 深棕绿色标题，配森林背景更和谐
-    ctx.fillStyle = '#3D6B4F';
+    ctx.fillStyle = Theme.colors.text.forest;
     ctx.shadowColor = 'rgba(61,107,79,0.3)';
     ctx.shadowBlur = 6;
-    ctx.fillText(`第${this.stage}关`, w / 2, topY + 14);
+    ctx.fillText(`第${this.stage}关`, w / 2, topY + 12);
     ctx.shadowBlur = 0;
     ctx.font = `${Theme.fonts.sizes.small}px ${Theme.fonts.primary}`;
     ctx.fillStyle = 'rgba(61,107,79,0.6)';
-    ctx.fillText(`剩余 ${remaining}/${total} 个字母`, w / 2, topY + 36);
+    ctx.fillText(`剩余 ${remaining}/${total} 个字母`, w / 2, topY + 32);
     ctx.restore();
-    const headerBottom = topY + 52;
+    const headerBottom = topY + 44;
 
-    // 显示目标单词中文释义
+    // ── 汉意 + 进度条（紧凑卡片） ──
     const meanings = this.stageData.words.map(w => w.meaning).join('、');
-    const meaningY = headerBottom + Theme.layout.gap.lg + 4;
-    ctx.font = `bold ${Theme.fonts.sizes.title}px ${Theme.fonts.primary}`;
-    ctx.fillStyle = '#70E8D0';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'top';
-    ctx.shadowColor = '#70E8D0';
-    ctx.shadowBlur = 12;
-    ctx.fillText(meanings, w / 2, meaningY);
-    ctx.shadowBlur = 0;
-
-    // 消除进度条 — 发光描边 + 填充渐变
     const remainingCount = remaining;
     const totalCount = total;
     const collected = totalCount - remainingCount;
     const progress = totalCount > 0 ? collected / totalCount : 0;
 
-    const barY = meaningY + Theme.fonts.sizes.title + Theme.layout.gap.md;
-    const barW = w - 60;
-    const barH = 14;
-    const barX = 30;
+    const cardPadX = 20;
+    const cardW = w - cardPadX * 2;
+    const cardX = cardPadX;
+    const cardY = headerBottom + 4;
+    const cardInnerPad = 8;
+    const meaningFontSize = 20;
+    const barH = 8;
+    const barW = cardW - cardInnerPad * 2;
+    const barX = cardX + cardInnerPad;
+    const cardH = cardInnerPad + meaningFontSize + 8 + barH + 16 + cardInnerPad;
 
-    // 底槽
-    ctx.fillStyle = '#E8E3D9';
-    this.roundRect(ctx, barX, barY, barW, barH, 7);
+    ctx.save();
+    const cardGrad = ctx.createLinearGradient(cardX, cardY, cardX, cardY + cardH);
+    cardGrad.addColorStop(0, 'rgba(255,252,245,0.82)');
+    cardGrad.addColorStop(1, 'rgba(255,245,228,0.78)');
+    ctx.fillStyle = cardGrad;
+    this.roundRect(ctx, cardX, cardY, cardW, cardH, 12);
     ctx.fill();
-    // 底槽微光描边
-    ctx.strokeStyle = 'rgba(200,195,180,0.4)';
+    ctx.strokeStyle = 'rgba(74,55,40,0.12)';
     ctx.lineWidth = 1;
-    this.roundRect(ctx, barX, barY, barW, barH, 7);
+    this.roundRect(ctx, cardX, cardY, cardW, cardH, 12);
     ctx.stroke();
+    ctx.restore();
+
+    const meaningY = cardY + cardInnerPad;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.font = `bold ${meaningFontSize}px ${Theme.fonts.primary}`;
+    ctx.fillStyle = '#1a4a32';
+    ctx.shadowColor = 'rgba(255,255,255,0.9)';
+    ctx.shadowBlur = 3;
+    ctx.shadowOffsetY = 1;
+    ctx.fillText(meanings, w / 2, meaningY);
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetY = 0;
+
+    const barY = meaningY + meaningFontSize + 8;
+    ctx.fillStyle = 'rgba(74,55,40,0.10)';
+    this.roundRect(ctx, barX, barY, barW, barH, barH / 2);
+    ctx.fill();
 
     if (progress > 0) {
       const fillW = Math.max(barH, barW * progress);
       const fillGrad = ctx.createLinearGradient(barX, barY, barX + fillW, barY);
-      fillGrad.addColorStop(0, '#51C9B0');
-      fillGrad.addColorStop(1, '#70E8D0');
+      fillGrad.addColorStop(0, Theme.colors.button.primary);
+      fillGrad.addColorStop(1, '#5dd39e');
       ctx.fillStyle = fillGrad;
-      this.roundRect(ctx, barX, barY, fillW, barH, 7);
+      this.roundRect(ctx, barX, barY, fillW, barH, barH / 2);
       ctx.fill();
-      // 填充条发光
-      ctx.save();
-      ctx.shadowColor = '#70E8D0';
-      ctx.shadowBlur = 6;
-      ctx.strokeStyle = 'rgba(112,232,208,0.5)';
-      ctx.lineWidth = 1;
-      this.roundRect(ctx, barX, barY, fillW, barH, 7);
-      ctx.stroke();
-      ctx.restore();
     }
 
-    ctx.font = `bold ${Theme.fonts.sizes.caption}px ${Theme.fonts.primary}`;
-    ctx.fillStyle = Theme.colors.text.green;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'top';
-    ctx.fillText(`消除进度 ${collected}/${totalCount}`, w / 2, barY + barH + 6);
+    ctx.font = `bold 11px ${Theme.fonts.primary}`;
+    ctx.fillStyle = Theme.colors.text.secondary;
+    ctx.fillText(`消除进度 ${collected}/${totalCount}`, w / 2, barY + barH + 5);
 
-    this._gameHeaderBottom = barY + barH + 6 + Theme.fonts.sizes.caption + Theme.layout.gap.sm;
+    this._gameHeaderBottom = cardY + cardH + Theme.layout.gap.sm;
     this._playLayout = this._calcPlayLayout(w, h);
 
     this.renderLetters(ctx, w, h);
@@ -1179,7 +1198,7 @@ export class GameScene extends BaseScene {
         ctx.save();
         ctx.globalAlpha = (1 - p / 0.6) * 0.2;
         ctx.fillStyle = a.topColor || '#BCF6E7';
-        ctx.shadowColor = a.topColor || '#70E8D0';
+        ctx.shadowColor = a.topColor || Theme.colors.accent.greenLight;
         ctx.shadowBlur = 16;
         ctx.beginPath();
         ctx.arc(a.x + s / 2, a.y + s / 2, s * 0.55, 0, Math.PI * 2);
@@ -1210,7 +1229,7 @@ export class GameScene extends BaseScene {
     ctx.translate(cx, cy);
 
     // 外发光
-    ctx.shadowColor = opts.glowColor || opts.topColor || '#70E8D0';
+    ctx.shadowColor = opts.glowColor || opts.topColor || Theme.colors.accent.greenLight;
     ctx.shadowBlur = opts.shadowBlur || 12;
 
     // 根据形状绘制路径
@@ -1345,7 +1364,7 @@ export class GameScene extends BaseScene {
 
     // 外发光边框（薄荷绿微光）
     ctx.save();
-    ctx.shadowColor = '#70E8D0';
+    ctx.shadowColor = Theme.colors.accent.greenLight;
     ctx.shadowBlur = 6;
     ctx.strokeStyle = 'rgba(112,232,208,0.25)';
     ctx.lineWidth = 1;
@@ -1393,8 +1412,8 @@ export class GameScene extends BaseScene {
       const expandR = slotSize * 0.5 * (1 + p * 0.8);
       // 外圈扩散光晕
       ctx.globalAlpha = (1 - p) * 0.25;
-      ctx.fillStyle = '#70E8D0';
-      ctx.shadowColor = '#70E8D0';
+      ctx.fillStyle = Theme.colors.accent.greenLight;
+      ctx.shadowColor = Theme.colors.accent.greenLight;
       ctx.shadowBlur = 12;
       ctx.beginPath();
       ctx.arc(a.x + slotSize / 2, a.y + slotSize / 2, expandR * 1.4, 0, Math.PI * 2);
@@ -1431,7 +1450,7 @@ export class GameScene extends BaseScene {
 
     // 卡片外发光
     ctx.save();
-    ctx.shadowColor = isWin ? '#70E8D0' : '#ef4444';
+    ctx.shadowColor = isWin ? Theme.colors.accent.greenLight : '#ef4444';
     ctx.shadowBlur = 20;
     this.drawGlassPanel(ctx, cardX, cardY, cardW, cardH, {
       border: isWin ? Theme.colors.button.primary : Theme.colors.button.danger,
@@ -1458,18 +1477,33 @@ export class GameScene extends BaseScene {
     const btnH = 40;
     const btnY = cardY + cardH - 60;
 
-    this.addButton(w / 2 - btnW - 8, btnY, btnW, btnH, '再试一次', Theme.colors.button.secondary, () => {
-      if (isErrorBook && this.errorWord) {
+    if (isWin && isErrorBook) {
+      // 错题本通关：记住了 / 再练一次
+      this.addButton(w / 2 - btnW - 8, btnY, btnW, btnH, '记住了', Theme.colors.button.primary, () => {
+        removeWrongWord(this.errorWord.word);
+        this.manager.switchTo('errorbook');
+      });
+      this.addButton(w / 2 + 8, btnY, btnW, btnH, '再练一次', Theme.colors.button.secondary, () => {
         this.onEnter({ fromErrorBook: true, word: this.errorWord });
-      } else {
-        this.onEnter({ stage: this.stage });
+      });
+    } else if (isWin) {
+      // 普通关卡通关：继续修炼
+      if (this.stage < 200) {
+        this.addButton(w / 2 - btnW / 2, btnY, btnW, btnH, '继续修炼', Theme.colors.button.primary, () => {
+          this.onEnter({ stage: this.stage + 1 });
+        });
       }
-    });
-    if (isWin && !isErrorBook && this.stage < 200) {
-      this.addButton(w / 2 + 8, btnY, btnW, btnH, '继续修炼', Theme.colors.button.primary, () => {
-        this.onEnter({ stage: this.stage + 1 });
+    } else {
+      // 失败：再试一次
+      this.addButton(w / 2 - btnW / 2, btnY, btnW, btnH, '再试一次', Theme.colors.button.secondary, () => {
+        if (isErrorBook && this.errorWord) {
+          this.onEnter({ fromErrorBook: true, word: this.errorWord });
+        } else {
+          this.onEnter({ stage: this.stage });
+        }
       });
     }
+    // 返回按钮
     this.addButton(w / 2 - 50, btnY + 50, 100, 32, '返回', Theme.colors.button.muted, () => {
       this.manager.switchTo(isErrorBook ? 'errorbook' : 'levels');
     });
@@ -1544,6 +1578,9 @@ export class GameScene extends BaseScene {
       return;
     }
 
+    // 点击音效
+    playTap();
+
     const slotIndex = this._occupiedSlotCount();
     const slotSize = this._slotSize;
     const slotGap = 5;
@@ -1595,6 +1632,10 @@ export class GameScene extends BaseScene {
         this.comboTextAnim = { text: word + '!', progress: 0 };
         this.slots = this.slots.filter((_, i) => !used[i]);
 
+        // 消除音效 + 朗读单词
+        playMatch();
+        pronounceWord(word);
+
         for (let i = 0; i < this.maxSlots; i++) {
           this.clearAnimations.push({
             x: this._slotsX + i * (this._slotSize + 5),
@@ -1622,6 +1663,7 @@ export class GameScene extends BaseScene {
       && this.slots.length >= this.maxSlots
       && this.flyAnimations.length === 0) {
       this.state = 'lose';
+      playLose();
       this.shakeTimer = 0.5;
       this.recordWrongWordsOnFail();
     }
@@ -1637,7 +1679,7 @@ export class GameScene extends BaseScene {
 
   spawnMatchParticles() {
     // 马卡龙色系粒子：淡青、淡黄、淡粉、浅绿、薄荷
-    const colors = ['#70E8D0', '#FFE89C', '#FFC8DD', '#BCF6E7', '#51C9B0', '#A8E6CF', '#FFD3B6'];
+    const colors = [Theme.colors.accent.greenLight, '#FFE89C', '#FFC8DD', '#BCF6E7', '#51C9B0', '#A8E6CF', '#FFD3B6'];
     const cx = this._slotsX + (this.maxSlots * (this._slotSize + 5)) / 2;
     const cy = this._slotsY + this._slotSize / 2;
     for (let i = 0; i < 30; i++) {

@@ -89,8 +89,8 @@ export class LevelSelect extends BaseScene {
     const totalCompleted = this.completedStages.length;
     const totalStages = getTotalStages();
 
-    // 森林背景 + 轻蒙层 + 花瓣
-    ctx.fillStyle = '#FFF9E8';
+    // 森林背景 + 轻蒙层
+    ctx.fillStyle = Theme.colors.background.fallback;
     ctx.fillRect(0, 0, w, h);
     if (this._bgImg && this._bgImg.width > 0) {
       const img = this._bgImg;
@@ -103,9 +103,8 @@ export class LevelSelect extends BaseScene {
     } else if (this.bgImage) {
       ctx.drawImage(this.bgImage, 0, 0, w, h);
     }
-    ctx.fillStyle = 'rgba(255,249,232,0.2)';
+    ctx.fillStyle = Theme.colors.background.imageOverlay;
     ctx.fillRect(0, 0, w, h);
-    // 花瓣飘落
     this.drawFallingPetals(ctx, w, h);
 
     // 装饰云雾
@@ -120,13 +119,13 @@ export class LevelSelect extends BaseScene {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.font = `bold ${Theme.fonts.sizes.header}px ${Theme.fonts.primary}`;
-    ctx.fillStyle = '#3D6B4F';
-    ctx.shadowColor = 'rgba(61,107,79,0.3)';
+    ctx.fillStyle = Theme.colors.text.forest;
+    ctx.shadowColor = 'rgba(74,107,79,0.35)';
     ctx.shadowBlur = 8;
     ctx.fillText('境界晋升图', w / 2, titleY);
     ctx.shadowBlur = 0;
     ctx.font = `${Theme.fonts.sizes.small}px ${Theme.fonts.primary}`;
-    ctx.fillStyle = 'rgba(61,107,79,0.5)';
+    ctx.fillStyle = 'rgba(74,103,65,0.55)';
     ctx.fillText(`已通关 ${totalCompleted}/${totalStages} 关`, w / 2, titleY + 22);
     ctx.restore();
 
@@ -261,7 +260,7 @@ export class LevelSelect extends BaseScene {
       // 完成对勾
       if (isCompleted) {
         ctx.font = `bold ${nodeR * 0.5}px sans-serif`;
-        ctx.fillStyle = '#059669';
+        ctx.fillStyle = Theme.colors.button.primary;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText('✓', cx, cy);
@@ -341,7 +340,7 @@ export class LevelSelect extends BaseScene {
     if (!realm) return;
 
     // 森林背景 + 轻蒙层
-    ctx.fillStyle = '#FFF9E8';
+    ctx.fillStyle = Theme.colors.background.fallback;
     ctx.fillRect(0, 0, w, h);
     if (this._bgImg && this._bgImg.width > 0) {
       const img = this._bgImg;
@@ -352,7 +351,7 @@ export class LevelSelect extends BaseScene {
       else { sw = img.width; sh = sw / screenRatio; sx = 0; sy = (img.height - sh) / 2; }
       ctx.drawImage(img, sx, sy, sw, sh, 0, 0, w, h);
     }
-    ctx.fillStyle = 'rgba(255,249,232,0.2)';
+    ctx.fillStyle = Theme.colors.background.imageOverlay;
     ctx.fillRect(0, 0, w, h);
     this.drawFallingPetals(ctx, w, h);
 
@@ -379,7 +378,7 @@ export class LevelSelect extends BaseScene {
     ctx.stroke();
     // 境界名称
     ctx.font = `bold ${Theme.fonts.sizes.body}px ${Theme.fonts.primary}`;
-    ctx.fillStyle = '#3D6B4F';
+    ctx.fillStyle = Theme.colors.text.forest;
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
     ctx.fillText(realm.name, 30, panelY + 28);
@@ -532,7 +531,7 @@ export class LevelSelect extends BaseScene {
     // 完成对勾
     if (opts.isCompleted) {
       ctx.font = `bold ${size * 0.22}px sans-serif`;
-      ctx.fillStyle = '#059669';
+      ctx.fillStyle = Theme.colors.button.primary;
       ctx.fillText('✓', cx + r * 0.5, cy - r * 0.5);
     }
 
