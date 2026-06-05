@@ -2,6 +2,7 @@
  * 错题本 — 本地存储 + 云同步
  */
 import { CloudService } from '../services/CloudService';
+import { WORD_TRIALS } from './WordTrials.js';
 
 const STORAGE_KEY = 'wrong_words';
 
@@ -112,6 +113,7 @@ export function buildErrorBookStageData(word) {
       phonetic: word.phonetic || '',
       past: word.past || '',
       example: word.example || '',
+      trial: WORD_TRIALS[word.word] || WORD_TRIALS[w.toLowerCase()] || null,
     }],
     wordCount: 1,
     maxSlots,

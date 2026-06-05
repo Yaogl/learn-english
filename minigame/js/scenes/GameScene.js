@@ -1,5 +1,5 @@
 import { BaseScene } from './BaseScene';
-import { getStageData } from '../data/LevelData';
+import { getStageData, calcWordMaxSlots } from '../data/LevelData';
 import {
   addWrongWordsOnFail,
   buildErrorBookStageData,
@@ -8,6 +8,7 @@ import {
 import { saveCompletedStage } from '../data/ProgressStore.js';
 import { Theme } from '../theme.js';
 import { playTap, playMatch, playWin, playLose, pronounceWord } from '../services/AudioService';
+import { getSentencePair } from '../data/SentenceTemplates';
 
 /**
  * 闯关模式 - 核心玩法
@@ -41,6 +42,18 @@ export class GameScene extends BaseScene {
     this.comboTextAnim = null;
     this.shakeTimer = 0;
     this.winAnim = 0;
+
+    // 通关试炼
+    this.trialState = 'none'; // none, showing, passed
+    this.trialSentences = null;
+    this.trialCurrent = 0; // 0=陈述句, 1=疑问句
+    this.trialBlanks = []; // 槽位已填入的词
+    this.trialWordTiles = []; // 打乱的单词块
+    this.trialResult = ''; // '' | 'correct' | 'wrong'
+    this.trialResultTimer = 0;
+
+    // 本关双词：当前进行到第几个（0 或 1）
+    this.currentWordIndex = 0;
 
     // 布局
     this._letterSize = 0;
@@ -78,16 +91,14 @@ export class GameScene extends BaseScene {
     // 记忆阶段（仅手动点「开始挑战」，不自动跳转）
     this.memoryDuration = 60;
     this.memoryTimer = this.memoryDuration;
-    this.memoryWords = this.stageData.words;
-    this.memoryIndex = 0;
+    this.currentWordIndex = 0;
+    this._setupWordRound(0);
     this.memoryRound = 1;
     this.memoryMaxRounds = 1;
 
     // 游戏阶段
     this.letters = [];
     this.slots = [];
-    this.targetStrings = this.stageData.words.map(w => w.word);
-    this.maxSlots = this.stageData.maxSlots;
 
     // 动画
     this.flyAnimations = [];
@@ -97,6 +108,15 @@ export class GameScene extends BaseScene {
     this.shakeTimer = 0;
     this.winAnim = 0;
     this._wrongWordsSaved = false;
+
+    // 通关试炼
+    this.trialState = 'none';
+    this.trialSentences = null;
+    this.trialCurrent = 0;
+    this.trialBlanks = [];
+    this.trialWordTiles = [];
+    this.trialResult = '';
+    this.trialResultTimer = 0;
 
     // 背景浮动圆点
     this._initBgDots();
@@ -116,6 +136,9 @@ export class GameScene extends BaseScene {
     }
 
     this.buttons = [];
+  }
+
+  onLeave() {
   }
 
   _occupiedSlotCount() {
@@ -192,8 +215,14 @@ export class GameScene extends BaseScene {
     }
 
     // 目标单词字母选完后结算并判胜（干扰字母无需点选）
-    if (this.state === 'playing' && this.flyAnimations.length === 0) {
+    // 试炼进行中时跳过，避免重复触发
+    if (this.state === 'playing' && this.flyAnimations.length === 0 && this.trialState === 'none') {
       this._tryCompleteLevel();
+    }
+
+    // 试炼结果计时
+    if (this.trialResult) {
+      this.trialResultTimer += dt;
     }
   }
 
@@ -220,13 +249,63 @@ export class GameScene extends BaseScene {
 
   _setWin() {
     if (this.state !== 'playing') return;
-    this.state = 'win';
-    this.winAnim = 0;
-    playWin();
-    // 错题本通关不立即删除，等用户确认"记住了"
-    if (!this.fromErrorBook) {
-      this.saveProgress();
+    this._startTrial();
+  }
+
+  /** 切换到本关第 index 个单词（记忆/消消乐/试炼均针对该词） */
+  _setupWordRound(index) {
+    this.currentWordIndex = index;
+    const wordData = this.stageData.words[index];
+    if (!wordData) return;
+    this.memoryWords = [wordData];
+    this.memoryIndex = 0;
+    this.targetStrings = [wordData.word];
+    this.maxSlots = calcWordMaxSlots(wordData.word);
+    this.slots = [];
+    this.letters = [];
+    this.flyAnimations = [];
+    this.clearAnimations = [];
+    this.trialState = 'none';
+    this.trialSentences = null;
+    this.trialCurrent = 0;
+    this.trialBlanks = [];
+    this.trialWordTiles = [];
+    this.trialResult = '';
+    this.trialResultTimer = 0;
+  }
+
+  /** 第一个单词试炼通过后，进入第二个单词 */
+  _startNextWordRound() {
+    this._setupWordRound(this.currentWordIndex);
+    this.state = 'memory';
+    this.animTime = 0;
+  }
+
+  /** 开始通关试炼（当前单词） */
+  _startTrial() {
+    const wordData = this.stageData.words[this.currentWordIndex];
+    this.trialSentences = getSentencePair(wordData);
+    this.trialCurrent = 0;
+    this.trialState = 'showing';
+    this._initTrialRound(0);
+  }
+
+  /** 初始化试炼轮次 */
+  _initTrialRound(round) {
+    this.trialCurrent = round;
+    const sentence = round === 0 ? this.trialSentences.declarative : this.trialSentences.interrogative;
+    const allWords = sentence.sentence.replace(/[.,!?]/g, '').split(/\s+/);
+    // 所有单词打乱作为可选块
+    const tiles = allWords.map(w => ({ text: w, used: false }));
+    for (let i = tiles.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [tiles[i], tiles[j]] = [tiles[j], tiles[i]];
     }
+    this.trialWordTiles = tiles;
+    // 所有位置都是空槽位
+    this.trialBlanks = allWords.map(() => '');
+    this.trialResult = '';
+    this.trialResultTimer = 0;
   }
 
   /** 目标字母已清完：结算灵槽并判胜 */
@@ -251,39 +330,22 @@ export class GameScene extends BaseScene {
   }
 
   /**
-   * 生成平铺字母 - 总数控制在50以内
-   * 根据单词字母总数动态计算重复次数
+   * 生成平铺字母 — 单单词，每字母重复 3～4 遍
    */
   generateLetters() {
-    const MAX_LETTERS = 50;
+    const word = this.targetStrings[0] || '';
+    const repeatCount = word.length <= 6 ? 4 : 3;
+    const distractorCount = 5;
     const allLetters = [];
 
-    // 统计所有目标单词的字母总数
-    let totalUniqueChars = 0;
-    for (const word of this.targetStrings) {
-      totalUniqueChars += word.length;
-    }
-
-    // 干扰字母预留 5 个
-    const distractorCount = 5;
-    const targetBudget = MAX_LETTERS - distractorCount;
-
-    // 动态计算重复次数：确保总数不超过限制
-    const repeatCount = Math.max(1, Math.floor(targetBudget / totalUniqueChars));
-
-    for (const word of this.targetStrings) {
-      for (let r = 0; r < repeatCount; r++) {
-        for (const char of word) {
-          allLetters.push({ text: char, groupSize: 1, isDistractor: false });
-        }
+    for (let r = 0; r < repeatCount; r++) {
+      for (const char of word) {
+        allLetters.push({ text: char, groupSize: 1, isDistractor: false });
       }
     }
 
-    // 干扰字母：不与目标单词字母重复
     const targetChars = new Set();
-    for (const word of this.targetStrings) {
-      for (const ch of word) targetChars.add(ch);
-    }
+    for (const ch of word) targetChars.add(ch);
     const pool = 'abcdefghijklmnopqrstuvwxyz'.split('').filter((c) => !targetChars.has(c));
     for (let i = pool.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -436,6 +498,11 @@ export class GameScene extends BaseScene {
 
     if (this.state === 'win' || this.state === 'lose') {
       this.renderResult(ctx, w, h);
+    }
+
+    // 通关试炼弹窗
+    if (this.trialState === 'showing') {
+      this.renderTrial(ctx, w, h);
     }
   }
 
@@ -692,7 +759,7 @@ export class GameScene extends BaseScene {
     // 副标题
     ctx.font = `${Theme.fonts.sizes.small}px ${Theme.fonts.primary}`;
     ctx.fillStyle = 'rgba(61,107,79,0.5)';
-    ctx.fillText('慢慢看，准备好了再点下方按钮', w / 2, titleY + 24);
+    ctx.fillText(`第 ${this.currentWordIndex + 1}/${this.stageData.words.length} 个单词`, w / 2, titleY + 24);
     ctx.restore();
 
     const contentTop = titleY + 48;
@@ -1045,7 +1112,7 @@ export class GameScene extends BaseScene {
     ctx.fillStyle = Theme.colors.text.forest;
     ctx.shadowColor = 'rgba(61,107,79,0.3)';
     ctx.shadowBlur = 6;
-    ctx.fillText(`第${this.stage}关`, w / 2, topY + 12);
+    ctx.fillText(`第${this.stage}关 · 单词${this.currentWordIndex + 1}/${this.stageData.words.length}`, w / 2, topY + 12);
     ctx.shadowBlur = 0;
     ctx.font = `${Theme.fonts.sizes.small}px ${Theme.fonts.primary}`;
     ctx.fillStyle = 'rgba(61,107,79,0.6)';
@@ -1054,7 +1121,7 @@ export class GameScene extends BaseScene {
     const headerBottom = topY + 44;
 
     // ── 汉意 + 进度条（紧凑卡片） ──
-    const meanings = this.stageData.words.map(w => w.meaning).join('、');
+    const meanings = this.memoryWords.map(w => w.meaning).join('、');
     const remainingCount = remaining;
     const totalCount = total;
     const collected = totalCount - remainingCount;
@@ -1428,6 +1495,319 @@ export class GameScene extends BaseScene {
     }
   }
 
+  // ==================== 通关试炼 ====================
+
+  renderTrial(ctx, w, h) {
+    const sentence = this.trialCurrent === 0
+      ? this.trialSentences.declarative
+      : this.trialSentences.interrogative;
+    const typeLabel = this.trialCurrent === 0 ? '陈述句' : '疑问句';
+    const correctWords = sentence.sentence.replace(/[.,!?]/g, '').split(/\s+/);
+
+    // 全屏遮罩
+    ctx.fillStyle = 'rgba(30,28,0,0.5)';
+    ctx.fillRect(0, 0, w, h);
+
+    // 弹窗卡片（自适应高度）
+    const cardW = w * 0.9;
+    const cardX = (w - cardW) / 2;
+    const cardY = h * 0.12;
+    const cardH = h * 0.76;
+
+    // 毛玻璃底板
+    ctx.save();
+    ctx.shadowColor = '#70E8D0';
+    ctx.shadowBlur = 20;
+    const cg = ctx.createLinearGradient(cardX, cardY, cardX, cardY + cardH);
+    cg.addColorStop(0, 'rgba(255,255,255,0.92)');
+    cg.addColorStop(1, 'rgba(255,255,255,0.75)');
+    ctx.fillStyle = cg;
+    this.roundRect(ctx, cardX, cardY, cardW, cardH, 20);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = 'rgba(112,232,208,0.4)';
+    ctx.lineWidth = 1.5;
+    this.roundRect(ctx, cardX, cardY, cardW, cardH, 20);
+    ctx.stroke();
+    ctx.restore();
+
+    // 内容区参数
+    const padX = 16;
+    const innerX = cardX + padX;
+    const innerW = cardW - padX * 2;
+    let curY = cardY + 24;
+
+    // ── 标题 ──
+    ctx.save();
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = `bold 16px ${Theme.fonts.primary}`;
+    ctx.fillStyle = '#3D6B4F';
+    ctx.shadowColor = '#70E8D0';
+    ctx.shadowBlur = 8;
+    ctx.fillText(`⚡ 通关试炼 · ${typeLabel}`, w / 2, curY);
+    ctx.shadowBlur = 0;
+    ctx.font = `11px ${Theme.fonts.primary}`;
+    ctx.fillStyle = 'rgba(61,107,79,0.5)';
+    ctx.fillText(`第 ${this.trialCurrent + 1}/2 题`, w / 2, curY + 18);
+    ctx.restore();
+    curY += 40;
+
+    // ── 中文句子 ──
+    ctx.save();
+    ctx.font = `bold 20px ${Theme.fonts.primary}`;
+    ctx.fillStyle = '#3D6B4F';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(sentence.chinese, w / 2, curY);
+    ctx.restore();
+    curY += 30;
+
+    // ── 分隔线 ──
+    ctx.save();
+    ctx.globalAlpha = 0.25;
+    const lineGrad = ctx.createLinearGradient(innerX, 0, innerX + innerW, 0);
+    lineGrad.addColorStop(0, 'rgba(112,232,208,0)');
+    lineGrad.addColorStop(0.5, 'rgba(112,232,208,0.6)');
+    lineGrad.addColorStop(1, 'rgba(112,232,208,0)');
+    ctx.strokeStyle = lineGrad;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(innerX, curY);
+    ctx.lineTo(innerX + innerW, curY);
+    ctx.stroke();
+    ctx.restore();
+    curY += 16;
+
+    // ── 打乱的英文单词块（中间区域）──
+    ctx.font = `11px ${Theme.fonts.primary}`;
+    ctx.fillStyle = 'rgba(61,107,79,0.4)';
+    ctx.textAlign = 'center';
+    ctx.fillText('点击英文单词，按正确顺序排列', w / 2, curY);
+    curY += 16;
+
+    const tileGap = 8;
+    const tileCols = Math.min(4, this.trialWordTiles.length);
+    const tileW = Math.min(72, (innerW - (tileCols - 1) * tileGap) / tileCols);
+    const tileH = 36;
+    const tileRows = Math.ceil(this.trialWordTiles.length / tileCols);
+    const tilesGridW = tileCols * tileW + (tileCols - 1) * tileGap;
+    const tilesStartX = (w - tilesGridW) / 2;
+    const tilesStartY = curY;
+
+    const palettes = [
+      ['#BCF6E7', '#51C9B0'], ['#FFE89C', '#F5C842'], ['#FFC8DD', '#FF9BB5'],
+      ['#C8E6FF', '#7CB9E8'], ['#E8D5F5', '#C4A8E0'], ['#D5F5E3', '#82D9A0'],
+    ];
+
+    for (let i = 0; i < this.trialWordTiles.length; i++) {
+      const tile = this.trialWordTiles[i];
+      const col = i % tileCols;
+      const row = Math.floor(i / tileCols);
+      const tx = tilesStartX + col * (tileW + tileGap);
+      const ty = tilesStartY + row * (tileH + tileGap);
+      const pal = palettes[i % palettes.length];
+      const isUsed = tile.used;
+
+      ctx.save();
+      if (isUsed) ctx.globalAlpha = 0.3;
+      const tGrad = ctx.createLinearGradient(tx, ty, tx, ty + tileH);
+      tGrad.addColorStop(0, pal[0]);
+      tGrad.addColorStop(1, pal[1]);
+      ctx.fillStyle = tGrad;
+      this.roundRect(ctx, tx, ty, tileW, tileH, 10);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(56,168,144,0.3)';
+      ctx.lineWidth = 1;
+      this.roundRect(ctx, tx, ty, tileW, tileH, 10);
+      ctx.stroke();
+      ctx.font = `bold 13px ${Theme.fonts.primary}`;
+      ctx.fillStyle = '#18594B';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(tile.text, tx + tileW / 2, ty + tileH / 2);
+      ctx.restore();
+
+      if (!isUsed) {
+        const tileIdx = i;
+        this.addButton(tx, ty, tileW, tileH, '', 'transparent', () => {
+          this._onTrialTileTap(tileIdx);
+        });
+      }
+    }
+
+    curY = tilesStartY + tileRows * (tileH + tileGap) + 16;
+
+    // ── 空槽位（目标句子顺序）──
+    ctx.font = `11px ${Theme.fonts.primary}`;
+    ctx.fillStyle = 'rgba(61,107,79,0.4)';
+    ctx.textAlign = 'center';
+    ctx.fillText('按正确顺序填入下方槽位', w / 2, curY);
+    curY += 14;
+
+    const slotCount = correctWords.length;
+    const slotGap = 6;
+    const slotW = Math.min(64, (innerW - (slotCount - 1) * slotGap) / slotCount);
+    const slotH = 36;
+    const slotsGridW = slotCount * slotW + (slotCount - 1) * slotGap;
+    const slotsStartX = (w - slotsGridW) / 2;
+
+    for (let i = 0; i < slotCount; i++) {
+      const sx = slotsStartX + i * (slotW + slotGap);
+      const filled = this.trialBlanks[i];
+
+      ctx.fillStyle = filled ? 'rgba(112,232,208,0.15)' : 'rgba(255,255,255,0.5)';
+      this.roundRect(ctx, sx, curY, slotW, slotH, 8);
+      ctx.fill();
+      ctx.strokeStyle = filled ? '#70E8D0' : '#C9C2B8';
+      ctx.lineWidth = filled ? 1.5 : 1;
+      ctx.setLineDash(filled ? [] : [4, 3]);
+      this.roundRect(ctx, sx, curY, slotW, slotH, 8);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.font = `bold 13px ${Theme.fonts.primary}`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      if (filled) {
+        ctx.fillStyle = '#3D6B4F';
+        ctx.fillText(filled, sx + slotW / 2, curY + slotH / 2);
+      } else {
+        ctx.fillStyle = '#C9C2B8';
+        ctx.fillText(`${i + 1}`, sx + slotW / 2, curY + slotH / 2);
+      }
+
+      if (filled) {
+        const slotIdx = i;
+        this.addButton(sx, curY, slotW, slotH, '', 'transparent', () => {
+          this._onTrialSlotTap(slotIdx);
+        });
+      }
+    }
+
+    curY += slotH + 12;
+
+    // ── 结果提示 ──
+    if (this.trialResult) {
+      ctx.font = `bold 13px ${Theme.fonts.primary}`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      if (this.trialResult === 'correct') {
+        ctx.fillStyle = '#059669';
+        ctx.fillText('✅ 天书已修复！', w / 2, curY);
+      } else {
+        ctx.fillStyle = '#ef4444';
+        ctx.fillText('⚡ 出现心魔，顺序不对！', w / 2, curY);
+      }
+      curY += 20;
+    }
+
+    // ── 底部按钮 ──
+    const btnY = cardY + cardH - 48;
+    const btnW = 110;
+    const btnH = 36;
+
+    this.addButton(cardX + 16, btnY, btnW, btnH, '清空重填', '#C9C2B8', () => {
+      this._clearTrialBlanks();
+    });
+
+    this.addButton(cardX + cardW - btnW - 16, btnY, btnW, btnH, '确认提交', '#3D6B4F', () => {
+      this._checkTrial();
+    });
+
+    this.renderButtons(ctx);
+  }
+
+  /** 点击槽位 → 单词退回 */
+  _onTrialSlotTap(slotIdx) {
+    const word = this.trialBlanks[slotIdx];
+    if (!word) return;
+    playTap();
+    const tile = this.trialWordTiles.find(t => t.text === word && t.used);
+    if (tile) tile.used = false;
+    this.trialBlanks[slotIdx] = '';
+    this.trialResult = '';
+  }
+
+  /** 清空所有槽位 */
+  _clearTrialBlanks() {
+    for (let i = 0; i < this.trialBlanks.length; i++) {
+      if (this.trialBlanks[i]) {
+        const tile = this.trialWordTiles.find(t => t.text === this.trialBlanks[i] && t.used);
+        if (tile) tile.used = false;
+        this.trialBlanks[i] = '';
+      }
+    }
+    this.trialResult = '';
+  }
+
+  /** 检查答案 */
+  _checkTrial() {
+    const sentence = this.trialCurrent === 0
+      ? this.trialSentences.declarative
+      : this.trialSentences.interrogative;
+    const correctWords = sentence.sentence.replace(/[.,!?]/g, '').split(/\s+/);
+
+    const allFilled = this.trialBlanks.every(w => w !== '');
+    if (!allFilled) {
+      this.trialResult = 'wrong';
+      return;
+    }
+
+    let isCorrect = true;
+    for (let i = 0; i < correctWords.length; i++) {
+      if (this.trialBlanks[i] !== correctWords[i]) {
+        isCorrect = false;
+        break;
+      }
+    }
+
+    if (isCorrect) {
+      this.trialResult = 'correct';
+      playMatch();
+      pronounceWord(sentence.sentence.replace(/[.,!?]/g, ''));
+      setTimeout(() => {
+        if (this.trialCurrent < 1) {
+          this._initTrialRound(1);
+        } else {
+          this._trialPassed();
+        }
+      }, 1800);
+    } else {
+      this.trialResult = 'wrong';
+      this.shakeTimer = 0.3;
+    }
+  }
+
+  /** 试炼全部通过 */
+  _trialPassed() {
+    const totalWords = this.stageData.words.length;
+    if (this.currentWordIndex < totalWords - 1) {
+      this.currentWordIndex += 1;
+      this._startNextWordRound();
+      return;
+    }
+    this.trialState = 'passed';
+    this.state = 'win';
+    this.winAnim = 0;
+    playWin();
+    if (!this.fromErrorBook) {
+      this.saveProgress();
+    }
+  }
+
+  /** 点击单词块 → 填入下一个空槽位 */
+  _onTrialTileTap(tileIdx) {
+    const tile = this.trialWordTiles[tileIdx];
+    if (!tile || tile.used) return;
+    const blankIdx = this.trialBlanks.findIndex(w => w === '');
+    if (blankIdx === -1) return;
+    playTap();
+    tile.used = true;
+    this.trialBlanks[blankIdx] = tile.text;
+    this.trialResult = '';
+  }
+
   renderResult(ctx, w, h) {
     // 柔和渐变遮罩
     const overlay = ctx.createLinearGradient(0, 0, 0, h);
@@ -1547,6 +1927,12 @@ export class GameScene extends BaseScene {
     }
 
     if (this.state !== 'playing') {
+      super.onTouchEnd(x, y);
+      return;
+    }
+
+    // 试炼进行中时跳过字母格点击
+    if (this.trialState === 'showing') {
       super.onTouchEnd(x, y);
       return;
     }

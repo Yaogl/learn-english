@@ -1,7 +1,9 @@
 /**
  * 关卡数据 - 12境界 × 20-30关
  * 每关：故事、单词、难度配置
+ * 试炼句对见 WordTrials.js（写死中英文，400 词全覆盖）
  */
+import { WORD_TRIALS } from './WordTrials.js';
 
 // 境界定义
 const REALMS = [
@@ -21,112 +23,139 @@ const REALMS = [
 
 // 单词库（按难度分级，含音标、过去式、例句）
 const WORD_POOL = {
-  // 难度1：3年级基础词（3-5字母）
+  // 难度1：5年级词汇（主力）
   easy: [
-    { word: 'cat', phonetic: '/kæt/', meaning: '猫', past: null, example: 'I have a cat.' },
-    { word: 'dog', phonetic: '/dɒɡ/', meaning: '狗', past: null, example: 'The dog is big.' },
-    { word: 'sun', phonetic: '/sʌn/', meaning: '太阳', past: null, example: 'The sun is hot.' },
-    { word: 'run', phonetic: '/rʌn/', meaning: '跑', past: 'ran', example: 'I run every day.' },
-    { word: 'hat', phonetic: '/hæt/', meaning: '帽子', past: null, example: 'This is my hat.' },
-    { word: 'big', phonetic: '/bɪɡ/', meaning: '大的', past: null, example: 'The elephant is big.' },
-    { word: 'red', phonetic: '/red/', meaning: '红色', past: null, example: 'I like red.' },
-    { word: 'fun', phonetic: '/fʌn/', meaning: '乐趣', past: null, example: 'This is fun!' },
-    { word: 'cup', phonetic: '/kʌp/', meaning: '杯子', past: null, example: 'A cup of tea.' },
-    { word: 'bus', phonetic: '/bʌs/', meaning: '公交车', past: null, example: 'I take a bus.' },
-    { word: 'map', phonetic: '/mæp/', meaning: '地图', past: null, example: 'Look at the map.' },
-    { word: 'pen', phonetic: '/pen/', meaning: '钢笔', past: null, example: 'This is a pen.' },
-    { word: 'box', phonetic: '/bɒks/', meaning: '盒子', past: null, example: 'In the box.' },
-    { word: 'fox', phonetic: '/fɒks/', meaning: '狐狸', past: null, example: 'The fox is fast.' },
-    { word: 'jam', phonetic: '/dʒæm/', meaning: '果酱', past: null, example: 'I like jam.' },
-    { word: 'leg', phonetic: '/leɡ/', meaning: '腿', past: null, example: 'My leg hurts.' },
-    { word: 'bed', phonetic: '/bed/', meaning: '床', past: null, example: 'Go to bed.' },
-    { word: 'pig', phonetic: '/pɪɡ/', meaning: '猪', past: null, example: 'The pig is pink.' },
-    { word: 'hen', phonetic: '/hen/', meaning: '母鸡', past: null, example: 'The hen lays eggs.' },
-    { word: 'hot', phonetic: '/hɒt/', meaning: '热的', past: null, example: 'It is hot today.' },
-    { word: 'not', phonetic: '/nɒt/', meaning: '不', past: null, example: 'I am not happy.' },
-    { word: 'got', phonetic: '/ɡɒt/', meaning: '得到', past: 'got', example: 'I got a gift.' },
-    { word: 'man', phonetic: '/mæn/', meaning: '男人', past: null, example: 'The man is tall.' },
-    { word: 'can', phonetic: '/kæn/', meaning: '能', past: null, example: 'I can swim.' },
-    { word: 'fan', phonetic: '/fæn/', meaning: '粉丝', past: null, example: 'I am a fan.' },
-    { word: 'dad', phonetic: '/dæd/', meaning: '爸爸', past: null, example: 'My dad is here.' },
-    { word: 'mom', phonetic: '/mɒm/', meaning: '妈妈', past: null, example: 'My mom is kind.' },
-    { word: 'boy', phonetic: '/bɔɪ/', meaning: '男孩', past: null, example: 'The boy runs.' },
-    { word: 'toy', phonetic: '/tɔɪ/', meaning: '玩具', past: null, example: 'This is my toy.' },
-    { word: 'joy', phonetic: '/dʒɔɪ/', meaning: '快乐', past: null, example: 'I feel joy.' },
-    { word: 'day', phonetic: '/deɪ/', meaning: '天', past: null, example: 'Good day!' },
-    { word: 'may', phonetic: '/meɪ/', meaning: '可能', past: null, example: 'May I go?' },
-    { word: 'say', phonetic: '/seɪ/', meaning: '说', past: 'said', example: 'I say hello.' },
-    { word: 'eat', phonetic: '/iːt/', meaning: '吃', past: 'ate', example: 'I eat lunch.' },
-    { word: 'tea', phonetic: '/tiː/', meaning: '茶', past: null, example: 'A cup of tea.' },
-    { word: 'sea', phonetic: '/siː/', meaning: '海', past: null, example: 'I love the sea.' },
-    { word: 'bee', phonetic: '/biː/', meaning: '蜜蜂', past: null, example: 'A bee is flying.' },
-    { word: 'see', phonetic: '/siː/', meaning: '看见', past: 'saw', example: 'I see a bird.' },
-    { word: 'tree', phonetic: '/triː/', meaning: '树', past: null, example: 'The tree is tall.' },
-    { word: 'home', phonetic: '/hoʊm/', meaning: '家', past: null, example: 'I go home.' },
-    { word: 'name', phonetic: '/neɪm/', meaning: '名字', past: null, example: 'My name is Tom.' },
-    { word: 'game', phonetic: '/ɡeɪm/', meaning: '游戏', past: null, example: 'I like this game.' },
-    { word: 'play', phonetic: '/pleɪ/', meaning: '玩', past: 'played', example: 'I play every day.' },
-    { word: 'book', phonetic: '/bʊk/', meaning: '书', past: null, example: 'Read a book.' },
-    { word: 'fish', phonetic: '/fɪʃ/', meaning: '鱼', past: null, example: 'I see a fish.' },
-    { word: 'bird', phonetic: '/bɜːrd/', meaning: '鸟', past: null, example: 'The bird can fly.' },
-    { word: 'cake', phonetic: '/keɪk/', meaning: '蛋糕', past: null, example: 'I like cake.' },
-    { word: 'milk', phonetic: '/mɪlk/', meaning: '牛奶', past: null, example: 'Drink milk.' },
-    { word: 'rain', phonetic: '/reɪn/', meaning: '雨', past: 'rained', example: 'It rains today.' },
+    // ===== 5年级 Unit1 餐饮饮食 =====
+    { word: 'would', phonetic: '/wʊd/', meaning: '想要；愿意', past: null, example: 'I would like some water.' },
+    { word: 'glad', phonetic: '/ɡlæd/', meaning: '高兴的', past: null, example: 'I am glad to see you.' },
+    { word: 'together', phonetic: '/təˈɡeðə/', meaning: '一起', past: null, example: 'Let us play together.' },
+    { word: 'hamburger', phonetic: '/ˈhæmbɜːɡə/', meaning: '汉堡包', past: null, example: 'I want a hamburger.' },
+    { word: 'Coke', phonetic: '/kəʊk/', meaning: '可乐', past: null, example: 'I like Coke.' },
+    { word: 'pie', phonetic: '/paɪ/', meaning: '馅饼', past: null, example: 'An apple pie.' },
+    { word: 'drink', phonetic: '/drɪŋk/', meaning: '喝；饮品', past: 'drank', example: 'Drink some juice.' },
+    { word: 'juice', phonetic: '/dʒuːs/', meaning: '果汁', past: null, example: 'I like orange juice.' },
+    { word: 'or', phonetic: '/ɔː/', meaning: '或者', past: null, example: 'Tea or coffee?' },
+    { word: 'enjoy', phonetic: '/ɪnˈdʒɔɪ/', meaning: '享用', past: 'enjoyed', example: 'Enjoy your meal.' },
+    { word: 'sleepy', phonetic: '/ˈsliːpi/', meaning: '困倦的', past: null, example: 'I am sleepy.' },
+    { word: 'bored', phonetic: '/bɔːd/', meaning: '烦闷的', past: null, example: 'I am bored.' },
+    { word: 'noodles', phonetic: '/ˈnuːdlz/', meaning: '面条', past: null, example: 'I like noodles.' },
+    { word: 'pizza', phonetic: '/ˈpiːtsə/', meaning: '披萨', past: null, example: 'Pizza is yummy.' },
+    { word: 'lemonade', phonetic: '/ˌleməˈneɪd/', meaning: '柠檬汁', past: null, example: 'Cold lemonade.' },
+    { word: 'hungry', phonetic: '/ˈhʌŋɡri/', meaning: '饥饿的', past: null, example: 'I am hungry.' },
+    { word: 'corner', phonetic: '/ˈkɔːnə/', meaning: '拐角', past: null, example: 'Turn the corner.' },
+    // ===== 5年级 Unit2 爱好与职业 =====
+    { word: 'always', phonetic: '/ˈɔːlweɪz/', meaning: '总是', past: null, example: 'I always study.' },
+    { word: 'usually', phonetic: '/ˈjuːʒuəli/', meaning: '通常', past: null, example: 'I usually walk.' },
+    { word: 'never', phonetic: '/ˈnevə/', meaning: '从不', past: null, example: 'I never give up.' },
+    { word: 'practice', phonetic: '/ˈpræktɪs/', meaning: '练习', past: 'practiced', example: 'Practice every day.' },
+    { word: 'pool', phonetic: '/puːl/', meaning: '游泳池', past: null, example: 'Swim in the pool.' },
+    { word: 'swimmer', phonetic: '/ˈswɪmə/', meaning: '游泳运动员', past: null, example: 'She is a swimmer.' },
+    { word: 'pilot', phonetic: '/ˈpaɪlət/', meaning: '飞行员', past: null, example: 'He is a pilot.' },
+    { word: 'fly', phonetic: '/flaɪ/', meaning: '驾驶（飞机）', past: 'flew', example: 'Birds fly high.' },
+    { word: 'plane', phonetic: '/pleɪn/', meaning: '飞机', past: null, example: 'The plane is fast.' },
+    { word: 'engineer', phonetic: '/ˌendʒɪˈnɪə/', meaning: '工程师', past: null, example: 'He is an engineer.' },
+    { word: 'design', phonetic: '/dɪˈzaɪn/', meaning: '设计', past: 'designed', example: 'Design a house.' },
+    { word: 'spaceship', phonetic: '/ˈspeɪsʃɪp/', meaning: '宇宙飞船', past: null, example: 'A cool spaceship.' },
+    { word: 'artist', phonetic: '/ˈɑːtɪst/', meaning: '艺术家', past: null, example: 'She is an artist.' },
+    { word: 'violinist', phonetic: '/ˌvaɪəˈlɪnɪst/', meaning: '小提琴手', past: null, example: 'A great violinist.' },
+    { word: 'fantastic', phonetic: '/fænˈtæstɪk/', meaning: '极好的', past: null, example: 'That is fantastic!' },
+    { word: 'hobby', phonetic: '/ˈhɒbi/', meaning: '爱好', past: null, example: 'My hobby is reading.' },
+    { word: 'job', phonetic: '/dʒɒb/', meaning: '工作', past: null, example: 'A good job.' },
+    { word: 'thought', phonetic: '/θɔːt/', meaning: '（think过去式）思考', past: 'thought', example: 'I thought about it.' },
+    { word: 'sad', phonetic: '/sæd/', meaning: '难过的', past: null, example: 'I feel sad.' },
+    { word: 'weekend', phonetic: '/ˌwiːkˈend/', meaning: '周末', past: null, example: 'Happy weekend!' },
+    { word: 'hiking', phonetic: '/ˈhaɪkɪŋ/', meaning: '远足', past: null, example: 'Go hiking today.' },
+    { word: 'family', phonetic: '/ˈfæməli/', meaning: '家人', past: null, example: 'I love my family.' },
+    // ===== 5年级 Unit3 假期出行计划 =====
+    { word: 'all', phonetic: '/ɔːl/', meaning: '全部', past: null, example: 'We all like it.' },
+    { word: 'last', phonetic: '/lɑːst/', meaning: '上一个；最后的', past: null, example: 'Last week.' },
+    { word: 'hear', phonetic: '/hɪə/', meaning: '听见', past: 'heard', example: 'I hear music.' },
+    { word: 'plan', phonetic: '/plæn/', meaning: '计划', past: 'planned', example: 'Make a plan.' },
+    { word: 'animal', phonetic: '/ˈænɪml/', meaning: '动物', past: null, example: 'I love animals.' },
+    { word: 'farmer', phonetic: '/ˈfɑːmə/', meaning: '农民', past: null, example: 'He is a farmer.' },
+    { word: 'vet', phonetic: '/vet/', meaning: '兽医', past: null, example: 'See the vet.' },
+    { word: 'feed', phonetic: '/fiːd/', meaning: '喂养', past: 'fed', example: 'Feed the cat.' },
+    { word: 'explore', phonetic: '/ɪkˈsplɔː/', meaning: '探险', past: 'explored', example: 'Explore the world.' },
+    { word: 'beach', phonetic: '/biːtʃ/', meaning: '沙滩', past: null, example: 'On the beach.' },
+    { word: 'mountain', phonetic: '/ˈmaʊntən/', meaning: '大山', past: null, example: 'Climb the mountain.' },
+    { word: 'grandparent', phonetic: '/ˈɡrændˌpeərənt/', meaning: '祖父母', past: null, example: 'Visit grandparent.' },
+    { word: 'astronaut', phonetic: '/ˈæstrənɔːt/', meaning: '宇航员', past: null, example: 'Be an astronaut.' },
+    { word: 'police', phonetic: '/pəˈliːs/', meaning: '警察', past: null, example: 'Call the police.' },
+    { word: 'Australia', phonetic: '/ɒˈstreɪliə/', meaning: '澳大利亚', past: null, example: 'Go to Australia.' },
+    { word: 'vacation', phonetic: '/veɪˈkeɪʃn/', meaning: '假期', past: null, example: 'Happy vacation!' },
+    { word: 'trip', phonetic: '/trɪp/', meaning: '旅行', past: null, example: 'A fun trip.' },
+    // ===== 5年级 Unit4 过去假期 =====
+    { word: 'camera', phonetic: '/ˈkæmrə/', meaning: '照相机', past: null, example: 'A new camera.' },
+    { word: 'check', phonetic: '/tʃek/', meaning: '检查', past: 'checked', example: 'Check it now.' },
+    { word: 'during', phonetic: '/ˈdjʊərɪŋ/', meaning: '在…期间', past: null, example: 'During the trip.' },
+    { word: 'forget', phonetic: '/fəˈɡet/', meaning: '忘记', past: 'forgot', example: 'Do not forget.' },
+    { word: 'holiday', phonetic: '/ˈhɒlədeɪ/', meaning: '假期', past: null, example: 'A nice holiday.' },
+    { word: 'list', phonetic: '/lɪst/', meaning: '清单', past: null, example: 'A shopping list.' },
+    { word: 'raincoat', phonetic: '/ˈreɪnkəʊt/', meaning: '雨衣', past: null, example: 'Wear a raincoat.' },
+    { word: 'schoolbag', phonetic: '/ˈskuːlbæɡ/', meaning: '书包', past: null, example: 'My schoolbag.' },
+    { word: 'sir', phonetic: '/sɜː/', meaning: '先生', past: null, example: 'Yes, sir.' },
+    { word: 'ticket', phonetic: '/ˈtɪkɪt/', meaning: '车票', past: null, example: 'Buy a ticket.' },
+    { word: 'week', phonetic: '/wiːk/', meaning: '星期', past: null, example: 'This week.' },
+    { word: 'will', phonetic: '/wɪl/', meaning: '将要', past: null, example: 'I will go.' },
+    { word: 'worry', phonetic: '/ˈwʌri/', meaning: '担心', past: 'worried', example: 'Do not worry.' },
+    { word: 'yours', phonetic: '/jɔːz/', meaning: '你的（东西）', past: null, example: 'It is yours.' },
+    // ===== 5年级 Unit5 方位城市地点 =====
+    { word: 'bank', phonetic: '/bæŋk/', meaning: '银行', past: null, example: 'Go to the bank.' },
+    { word: 'block', phonetic: '/blɒk/', meaning: '街区', past: null, example: 'Walk one block.' },
+    { word: 'building', phonetic: '/ˈbɪldɪŋ/', meaning: '楼房', past: null, example: 'A tall building.' },
+    { word: 'city', phonetic: '/ˈsɪti/', meaning: '城市', past: null, example: 'A big city.' },
+    { word: 'country', phonetic: '/ˈkʌntri/', meaning: '国家', past: null, example: 'My country.' },
+    { word: 'Egypt', phonetic: '/ˈiːdʒɪpt/', meaning: '埃及', past: null, example: 'Go to Egypt.' },
+    { word: 'Paris', phonetic: '/ˈpærɪs/', meaning: '巴黎', past: null, example: 'Paris is nice.' },
+    { word: 'place', phonetic: '/pleɪs/', meaning: '地点', past: null, example: 'A good place.' },
+    { word: 'pyramid', phonetic: '/ˈpɪrəmɪd/', meaning: '金字塔', past: null, example: 'A big pyramid.' },
+    { word: 'restaurant', phonetic: '/ˈrestərɒnt/', meaning: '餐馆', past: null, example: 'Eat at a restaurant.' },
+    { word: 'restroom', phonetic: '/ˈrestruːm/', meaning: '卫生间', past: null, example: 'Where is the restroom?' },
+    { word: 'theater', phonetic: '/ˈθiːətə/', meaning: '剧院', past: null, example: 'Go to the theater.' },
+    { word: 'tower', phonetic: '/ˈtaʊə/', meaning: '塔', past: null, example: 'A tall tower.' },
+    { word: 'zoo', phonetic: '/zuː/', meaning: '动物园', past: null, example: 'Go to the zoo.' },
+    { word: 'left', phonetic: '/left/', meaning: '左边', past: null, example: 'Turn left.' },
+    { word: 'right', phonetic: '/raɪt/', meaning: '右边', past: null, example: 'Turn right.' },
+    { word: 'straight', phonetic: '/streɪt/', meaning: '笔直地', past: null, example: 'Go straight.' },
+    { word: 'turn', phonetic: '/tɜːn/', meaning: '转弯', past: 'turned', example: 'Turn left.' },
+    { word: 'welcome', phonetic: '/ˈwelkəm/', meaning: '欢迎', past: null, example: 'Welcome!' },
+    // ===== 5年级 Unit6 天气 =====
+    { word: 'cloud', phonetic: '/klaʊd/', meaning: '云', past: null, example: 'A white cloud.' },
+    { word: 'cloudy', phonetic: '/ˈklaʊdi/', meaning: '多云的', past: null, example: 'It is cloudy.' },
+    { word: 'dry', phonetic: '/draɪ/', meaning: '干燥的', past: null, example: 'The air is dry.' },
+    { word: 'drop', phonetic: '/drɒp/', meaning: '雨滴', past: null, example: 'A rain drop.' },
+    { word: 'feel', phonetic: '/fiːl/', meaning: '感觉', past: 'felt', example: 'I feel happy.' },
+    { word: 'hard', phonetic: '/hɑːd/', meaning: '猛烈地', past: null, example: 'It rains hard.' },
+    { word: 'kite', phonetic: '/kaɪt/', meaning: '风筝', past: null, example: 'Fly a kite.' },
+    { word: 'pouring', phonetic: '/ˈpɔːrɪŋ/', meaning: '瓢泼大雨', past: null, example: 'It is pouring.' },
+    { word: 'rain', phonetic: '/reɪn/', meaning: '下雨；雨水', past: 'rained', example: 'It rains today.' },
+    { word: 'rainy', phonetic: '/ˈreɪni/', meaning: '下雨的', past: null, example: 'A rainy day.' },
+    { word: 'snow', phonetic: '/snəʊ/', meaning: '雪；下雪', past: 'snowed', example: 'It snows in winter.' },
+    { word: 'snowy', phonetic: '/ˈsnəʊi/', meaning: '下雪的', past: null, example: 'A snowy day.' },
+    { word: 'sunny', phonetic: '/ˈsʌni/', meaning: '晴朗的', past: null, example: 'It is sunny.' },
     { word: 'wind', phonetic: '/wɪnd/', meaning: '风', past: null, example: 'The wind is strong.' },
-    { word: 'snow', phonetic: '/snoʊ/', meaning: '雪', past: 'snowed', example: 'It snows in winter.' },
-    // ===== 新增基础词汇 =====
-    { word: 'arm', phonetic: '/ɑːrm/', meaning: '手臂', past: null, example: 'My arm is strong.' },
-    { word: 'ear', phonetic: '/ɪr/', meaning: '耳朵', past: null, example: 'I hear with my ear.' },
-    { word: 'eye', phonetic: '/aɪ/', meaning: '眼睛', past: null, example: 'Close your eyes.' },
-    { word: 'egg', phonetic: '/eɡ/', meaning: '鸡蛋', past: null, example: 'I eat an egg.' },
-    { word: 'ice', phonetic: '/aɪs/', meaning: '冰', past: null, example: 'The ice is cold.' },
-    { word: 'old', phonetic: '/oʊld/', meaning: '老的', past: null, example: 'The tree is old.' },
-    { word: 'new', phonetic: '/nuː/', meaning: '新的', past: null, example: 'I have a new book.' },
-    { word: 'try', phonetic: '/traɪ/', meaning: '尝试', past: 'tried', example: 'Try your best.' },
-    { word: 'ask', phonetic: '/æsk/', meaning: '问', past: 'asked', example: 'Ask a question.' },
-    { word: 'put', phonetic: '/pʊt/', meaning: '放', past: 'put', example: 'Put it here.' },
-    { word: 'cut', phonetic: '/kʌt/', meaning: '切', past: 'cut', example: 'Cut the paper.' },
-    { word: 'let', phonetic: '/let/', meaning: '让', past: 'let', example: 'Let me try.' },
-    { word: 'get', phonetic: '/ɡet/', meaning: '得到', past: 'got', example: 'I get it.' },
-    { word: 'ball', phonetic: '/bɔːl/', meaning: '球', past: null, example: 'Kick the ball.' },
-    { word: 'call', phonetic: '/kɔːl/', meaning: '打电话', past: 'called', example: 'Call me later.' },
-    { word: 'fall', phonetic: '/fɔːl/', meaning: '落下', past: 'fell', example: 'Leaves fall down.' },
-    { word: 'wall', phonetic: '/wɔːl/', meaning: '墙', past: null, example: 'On the wall.' },
-    { word: 'back', phonetic: '/bæk/', meaning: '回来', past: null, example: 'Come back.' },
-    { word: 'face', phonetic: '/feɪs/', meaning: '脸', past: null, example: 'Wash your face.' },
-    { word: 'hand', phonetic: '/hænd/', meaning: '手', past: null, example: 'Raise your hand.' },
-    { word: 'head', phonetic: '/hed/', meaning: '头', past: null, example: 'Nod your head.' },
-    { word: 'help', phonetic: '/help/', meaning: '帮助', past: 'helped', example: 'Help me please.' },
-    { word: 'jump', phonetic: '/dʒʌmp/', meaning: '跳', past: 'jumped', example: 'Jump high!' },
-    { word: 'keep', phonetic: '/kiːp/', meaning: '保持', past: 'kept', example: 'Keep quiet.' },
-    { word: 'kind', phonetic: '/kaɪnd/', meaning: '善良的', past: null, example: 'She is kind.' },
-    { word: 'like', phonetic: '/laɪk/', meaning: '喜欢', past: 'liked', example: 'I like it.' },
-    { word: 'look', phonetic: '/lʊk/', meaning: '看', past: 'looked', example: 'Look at me.' },
-    { word: 'love', phonetic: '/lʌv/', meaning: '爱', past: 'loved', example: 'I love you.' },
-    { word: 'make', phonetic: '/meɪk/', meaning: '制作', past: 'made', example: 'Make a cake.' },
-    { word: 'move', phonetic: '/muːv/', meaning: '移动', past: 'moved', example: 'Move it here.' },
-    { word: 'need', phonetic: '/niːd/', meaning: '需要', past: 'needed', example: 'I need help.' },
-    { word: 'open', phonetic: '/ˈoʊpən/', meaning: '打开', past: 'opened', example: 'Open the door.' },
-    { word: 'pick', phonetic: '/pɪk/', meaning: '挑选', past: 'picked', example: 'Pick one.' },
-    { word: 'ride', phonetic: '/raɪd/', meaning: '骑', past: 'rode', example: 'Ride a bike.' },
-    { word: 'sing', phonetic: '/sɪŋ/', meaning: '唱歌', past: 'sang', example: 'Sing a song.' },
-    { word: 'swim', phonetic: '/swɪm/', meaning: '游泳', past: 'swam', example: 'I can swim.' },
-    { word: 'take', phonetic: '/teɪk/', meaning: '拿', past: 'took', example: 'Take this.' },
-    { word: 'talk', phonetic: '/tɔːk/', meaning: '说话', past: 'talked', example: 'Let us talk.' },
-    { word: 'tell', phonetic: '/tel/', meaning: '告诉', past: 'told', example: 'Tell me why.' },
-    { word: 'turn', phonetic: '/tɜːrn/', meaning: '转', past: 'turned', example: 'Turn left.' },
-    { word: 'walk', phonetic: '/wɔːk/', meaning: '走', past: 'walked', example: 'Walk slowly.' },
-    { word: 'want', phonetic: '/wɒnt/', meaning: '想要', past: 'wanted', example: 'I want it.' },
-    { word: 'wash', phonetic: '/wɒʃ/', meaning: '洗', past: 'washed', example: 'Wash your hands.' },
-    { word: 'work', phonetic: '/wɜːrk/', meaning: '工作', past: 'worked', example: 'I work hard.' },
-    { word: 'year', phonetic: '/jɪr/', meaning: '年', past: null, example: 'Happy new year.' },
-    { word: 'your', phonetic: '/jʊr/', meaning: '你的', past: null, example: 'Your turn.' },
-    { word: 'star', phonetic: '/stɑːr/', meaning: '星星', past: null, example: 'A bright star.' },
-    { word: 'moon', phonetic: '/muːn/', meaning: '月亮', past: null, example: 'The moon is bright.' },
-    { word: 'fire', phonetic: '/ˈfaɪər/', meaning: '火', past: null, example: 'Fire is hot.' },
-    { word: 'king', phonetic: '/kɪŋ/', meaning: '国王', past: null, example: 'The king smiles.' },
+    { word: 'windy', phonetic: '/ˈwɪndi/', meaning: '刮风的', past: null, example: 'It is windy.' },
+    { word: 'best', phonetic: '/best/', meaning: '最好的', past: null, example: 'You are the best.' },
+    // ===== 5年级 Unit7 季节与旅行 =====
+    { word: 'spring', phonetic: '/sprɪŋ/', meaning: '春天', past: null, example: 'Spring is warm.' },
+    { word: 'summer', phonetic: '/ˈsʌmə/', meaning: '夏天', past: null, example: 'Summer is hot.' },
+    { word: 'autumn', phonetic: '/ˈɔːtəm/', meaning: '秋天', past: null, example: 'Autumn is cool.' },
+    { word: 'winter', phonetic: '/ˈwɪntə/', meaning: '冬天', past: null, example: 'Winter is cold.' },
+    { word: 'season', phonetic: '/ˈsiːzn/', meaning: '季节', past: null, example: 'My favorite season.' },
+    { word: 'warm', phonetic: '/wɔːm/', meaning: '温暖', past: null, example: 'It is warm.' },
+    { word: 'cool', phonetic: '/kuːl/', meaning: '凉爽', past: null, example: 'It is cool.' },
+    { word: 'cold', phonetic: '/kəʊld/', meaning: '寒冷', past: null, example: 'It is cold.' },
+    { word: 'hot', phonetic: '/hɒt/', meaning: '炎热', past: null, example: 'It is hot today.' },
+    { word: 'travel', phonetic: '/ˈtrævl/', meaning: '旅行', past: 'traveled', example: 'Travel the world.' },
+    { word: 'umbrella', phonetic: '/ʌmˈbrelə/', meaning: '雨伞', past: null, example: 'Bring an umbrella.' },
+    { word: 'coat', phonetic: '/kəʊt/', meaning: '外套', past: null, example: 'Wear a coat.' },
+    { word: 'boots', phonetic: '/buːts/', meaning: '靴子', past: null, example: 'My new boots.' },
+    { word: 'gloves', phonetic: '/ɡlʌvz/', meaning: '手套', past: null, example: 'Wear gloves.' },
+    { word: 'scarf', phonetic: '/skɑːf/', meaning: '围巾', past: null, example: 'A red scarf.' },
+    { word: 'same', phonetic: '/seɪm/', meaning: '相同的', past: null, example: 'The same.' },
+    { word: 'outside', phonetic: '/ˌaʊtˈsaɪd/', meaning: '在户外', past: null, example: 'Play outside.' },
   ],
-  // 难度2：4年级词（5-7字母）
+  // 难度2：4-5年级进阶词
   medium: [
     { word: 'apple', phonetic: '/ˈæpəl/', meaning: '苹果', past: null, example: 'I eat an apple.' },
     { word: 'happy', phonetic: '/ˈhæpi/', meaning: '快乐的', past: null, example: 'I am happy.' },
@@ -134,13 +163,11 @@ const WORD_POOL = {
     { word: 'green', phonetic: '/ɡriːn/', meaning: '绿色', past: null, example: 'The grass is green.' },
     { word: 'house', phonetic: '/haʊs/', meaning: '房子', past: null, example: 'This is my house.' },
     { word: 'horse', phonetic: '/hɔːrs/', meaning: '马', past: null, example: 'The horse runs fast.' },
-    { word: 'plane', phonetic: '/pleɪn/', meaning: '飞机', past: null, example: 'The plane flies high.' },
     { word: 'train', phonetic: '/treɪn/', meaning: '火车', past: null, example: 'I take a train.' },
     { word: 'tiger', phonetic: '/ˈtaɪɡər/', meaning: '老虎', past: null, example: 'The tiger is strong.' },
     { word: 'snake', phonetic: '/sneɪk/', meaning: '蛇', past: null, example: 'I see a snake.' },
     { word: 'sheep', phonetic: '/ʃiːp/', meaning: '绵羊', past: null, example: 'The sheep is white.' },
     { word: 'bread', phonetic: '/bred/', meaning: '面包', past: null, example: 'I eat bread.' },
-    { word: 'juice', phonetic: '/dʒuːs/', meaning: '果汁', past: null, example: 'I like juice.' },
     { word: 'candy', phonetic: '/ˈkændi/', meaning: '糖果', past: null, example: 'I like candy.' },
     { word: 'dance', phonetic: '/dæns/', meaning: '跳舞', past: 'danced', example: 'I like to dance.' },
     { word: 'speak', phonetic: '/spiːk/', meaning: '说', past: 'spoke', example: 'I speak English.' },
@@ -158,17 +185,11 @@ const WORD_POOL = {
     { word: 'clock', phonetic: '/klɒk/', meaning: '钟', past: null, example: 'The clock ticks.' },
     { word: 'light', phonetic: '/laɪt/', meaning: '灯', past: null, example: 'Turn on the light.' },
     { word: 'music', phonetic: '/ˈmjuːzɪk/', meaning: '音乐', past: null, example: 'I love music.' },
-    { word: 'spring', phonetic: '/sprɪŋ/', meaning: '春天', past: null, example: 'Spring is warm.' },
-    { word: 'summer', phonetic: '/ˈsʌmər/', meaning: '夏天', past: null, example: 'Summer is hot.' },
-    { word: 'winter', phonetic: '/ˈwɪntər/', meaning: '冬天', past: null, example: 'Winter is cold.' },
     { word: 'friend', phonetic: '/frend/', meaning: '朋友', past: null, example: 'He is my friend.' },
-    { word: 'family', phonetic: '/ˈfæməli/', meaning: '家庭', past: null, example: 'I love my family.' },
     { word: 'school', phonetic: '/skuːl/', meaning: '学校', past: null, example: 'I go to school.' },
     { word: 'flower', phonetic: '/ˈflaʊər/', meaning: '花', past: null, example: 'The flower is pretty.' },
     { word: 'river', phonetic: '/ˈrɪvər/', meaning: '河', past: null, example: 'The river is long.' },
-    { word: 'green', phonetic: '/ɡriːn/', meaning: '绿色', past: null, example: 'I like green.' },
-    { word: 'happy', phonetic: '/ˈhæpi/', meaning: '快乐', past: null, example: 'Be happy!' },
-    // ===== 新增进阶词汇 =====
+    // ===== 进阶词汇 =====
     { word: 'about', phonetic: '/əˈbaʊt/', meaning: '关于', past: null, example: 'Tell me about it.' },
     { word: 'after', phonetic: '/ˈæftər/', meaning: '之后', past: null, example: 'After school.' },
     { word: 'again', phonetic: '/əˈɡen/', meaning: '再', past: null, example: 'Try again.' },
@@ -179,7 +200,6 @@ const WORD_POOL = {
     { word: 'climb', phonetic: '/klaɪm/', meaning: '爬', past: 'climbed', example: 'Climb the tree.' },
     { word: 'close', phonetic: '/kloʊz/', meaning: '关闭', past: 'closed', example: 'Close the door.' },
     { word: 'draw', phonetic: '/drɔː/', meaning: '画', past: 'drew', example: 'Draw a picture.' },
-    { word: 'drink', phonetic: '/drɪŋk/', meaning: '喝', past: 'drank', example: 'Drink water.' },
     { word: 'early', phonetic: '/ˈɜːrli/', meaning: '早的', past: null, example: 'Wake up early.' },
     { word: 'earth', phonetic: '/ɜːrθ/', meaning: '地球', past: null, example: 'The earth is round.' },
     { word: 'every', phonetic: '/ˈevri/', meaning: '每个', past: null, example: 'Every day.' },
@@ -196,7 +216,6 @@ const WORD_POOL = {
     { word: 'paper', phonetic: '/ˈpeɪpər/', meaning: '纸', past: null, example: 'A piece of paper.' },
     { word: 'plant', phonetic: '/plænt/', meaning: '植物', past: 'planted', example: 'Plant a tree.' },
     { word: 'quiet', phonetic: '/ˈkwaɪət/', meaning: '安静的', past: null, example: 'Be quiet.' },
-    { word: 'right', phonetic: '/raɪt/', meaning: '正确的', past: null, example: 'That is right.' },
     { word: 'share', phonetic: '/ʃer/', meaning: '分享', past: 'shared', example: 'Share with me.' },
     { word: 'sleep', phonetic: '/sliːp/', meaning: '睡觉', past: 'slept', example: 'I need sleep.' },
     { word: 'smile', phonetic: '/smaɪl/', meaning: '微笑', past: 'smiled', example: 'She smiles.' },
@@ -213,7 +232,6 @@ const WORD_POOL = {
     { word: 'white', phonetic: '/waɪt/', meaning: '白色', past: null, example: 'Snow is white.' },
     { word: 'world', phonetic: '/wɜːrld/', meaning: '世界', past: null, example: 'Around the world.' },
     { word: 'young', phonetic: '/jʌŋ/', meaning: '年轻的', past: null, example: 'She is young.' },
-    { word: 'beach', phonetic: '/biːtʃ/', meaning: '海滩', past: null, example: 'On the beach.' },
     { word: 'dream', phonetic: '/driːm/', meaning: '梦', past: 'dreamed', example: 'Sweet dreams.' },
     { word: 'grape', phonetic: '/ɡreɪp/', meaning: '葡萄', past: null, example: 'I like grapes.' },
     { word: 'lemon', phonetic: '/ˈlemən/', meaning: '柠檬', past: null, example: 'A sour lemon.' },
@@ -222,7 +240,6 @@ const WORD_POOL = {
   ],
   // 难度3：5-6年级词（6-8字母）
   hard: [
-    { word: 'animal', phonetic: '/ˈænɪməl/', meaning: '动物', past: null, example: 'I love animals.' },
     { word: 'teacher', phonetic: '/ˈtiːtʃər/', meaning: '老师', past: null, example: 'My teacher is kind.' },
     { word: 'student', phonetic: '/ˈstjuːdənt/', meaning: '学生', past: null, example: 'I am a student.' },
     { word: 'garden', phonetic: '/ˈɡɑːrdən/', meaning: '花园', past: null, example: 'In the garden.' },
@@ -250,7 +267,6 @@ const WORD_POOL = {
     { word: 'different', phonetic: '/ˈdɪfrənt/', meaning: '不同的', past: null, example: 'We are different.' },
     { word: 'important', phonetic: '/ɪmˈpɔːrtənt/', meaning: '重要的', past: null, example: 'This is important.' },
     { word: 'interesting', phonetic: '/ˈɪntrəstɪŋ/', meaning: '有趣的', past: null, example: 'This is interesting.' },
-    { word: 'mountain', phonetic: '/ˈmaʊntən/', meaning: '山', past: null, example: 'The mountain is high.' },
     { word: 'ocean', phonetic: '/ˈoʊʃən/', meaning: '海洋', past: null, example: 'The ocean is big.' },
     // ===== 新增高阶词汇 =====
     { word: 'airport', phonetic: '/ˈerpɔːrt/', meaning: '机场', past: null, example: 'Go to the airport.' },
@@ -261,7 +277,6 @@ const WORD_POOL = {
     { word: 'clever', phonetic: '/ˈklevər/', meaning: '聪明的', past: null, example: 'She is clever.' },
     { word: 'collect', phonetic: '/kəˈlekt/', meaning: '收集', past: 'collected', example: 'Collect stamps.' },
     { word: 'company', phonetic: '/ˈkʌmpəni/', meaning: '公司', past: null, example: 'A big company.' },
-    { word: 'country', phonetic: '/ˈkʌntri/', meaning: '国家', past: null, example: 'My country.' },
     { word: 'cousin', phonetic: '/ˈkʌzən/', meaning: '表亲', past: null, example: 'My cousin.' },
     { word: 'crystal', phonetic: '/ˈkrɪstəl/', meaning: '水晶', past: null, example: 'A crystal ball.' },
     { word: 'culture', phonetic: '/ˈkʌltʃər/', meaning: '文化', past: null, example: 'Chinese culture.' },
@@ -274,7 +289,6 @@ const WORD_POOL = {
     { word: 'dragon', phonetic: '/ˈdræɡən/', meaning: '龙', past: null, example: 'A fire dragon.' },
     { word: 'escape', phonetic: '/ɪˈskeɪp/', meaning: '逃跑', past: 'escaped', example: 'Escape from here.' },
     { word: 'example', phonetic: '/ɪɡˈzæmpəl/', meaning: '例子', past: null, example: 'Give an example.' },
-    { word: 'explore', phonetic: '/ɪkˈsplɔːr/', meaning: '探索', past: 'explored', example: 'Explore the world.' },
     { word: 'famous', phonetic: '/ˈfeɪməs/', meaning: '著名的', past: null, example: 'A famous person.' },
     { word: 'feather', phonetic: '/ˈfeðər/', meaning: '羽毛', past: null, example: 'A soft feather.' },
     { word: 'finger', phonetic: '/ˈfɪŋɡər/', meaning: '手指', past: null, example: 'Point your finger.' },
@@ -294,14 +308,11 @@ const WORD_POOL = {
     { word: 'master', phonetic: '/ˈmæstər/', meaning: '大师', past: null, example: 'A kung fu master.' },
     { word: 'mirror', phonetic: '/ˈmɪrər/', meaning: '镜子', past: null, example: 'Look in the mirror.' },
     { word: 'modern', phonetic: '/ˈmɒdərn/', meaning: '现代的', past: null, example: 'Modern technology.' },
-    { word: 'monkey', phonetic: '/ˈmʌŋki/', meaning: '猴子', past: null, example: 'A funny monkey.' },
     { word: 'planet', phonetic: '/ˈplænɪt/', meaning: '行星', past: null, example: 'A blue planet.' },
     { word: 'silver', phonetic: '/ˈsɪlvər/', meaning: '银色', past: null, example: 'A silver ring.' },
     { word: 'spirit', phonetic: '/ˈspɪrɪt/', meaning: '精神', past: null, example: 'Team spirit.' },
     { word: 'temple', phonetic: '/ˈtempəl/', meaning: '寺庙', past: null, example: 'An old temple.' },
-    { word: 'travel', phonetic: '/ˈtrævəl/', meaning: '旅行', past: 'traveled', example: 'Travel the world.' },
     { word: 'village', phonetic: '/ˈvɪlɪdʒ/', meaning: '村庄', past: null, example: 'A small village.' },
-    { word: 'winter', phonetic: '/ˈwɪntər/', meaning: '冬天', past: null, example: 'Winter is cold.' },
   ],
   // 难度4：初中词（7-10字母）
   expert: [
@@ -381,7 +392,97 @@ const WORD_POOL = {
     { word: 'dominant', phonetic: '/ˈdɒmɪnənt/', meaning: '占主导的', past: null, example: 'A dominant position.' },
     { word: 'dramatic', phonetic: '/drəˈmætɪk/', meaning: '戏剧性的', past: null, example: 'A dramatic change.' },
   ],
+  // 生活常用（易混易忘）
+  common: [
+    { word: 'homework', phonetic: '/ˈhoʊmwɜːrk/', meaning: '家庭作业', past: null, example: 'I do my homework.' },
+    { word: 'classroom', phonetic: '/ˈklæsruːm/', meaning: '教室', past: null, example: 'We are in the classroom.' },
+    { word: 'library', phonetic: '/ˈlaɪbreri/', meaning: '图书馆', past: null, example: 'Go to the library.' },
+    { word: 'playground', phonetic: '/ˈpleɪɡraʊnd/', meaning: '操场', past: null, example: 'Play on the playground.' },
+    { word: 'eraser', phonetic: '/ɪˈreɪsər/', meaning: '橡皮', past: null, example: 'Use an eraser.' },
+    { word: 'ruler', phonetic: '/ˈruːlər/', meaning: '尺子', past: null, example: 'I need a ruler.' },
+    { word: 'backpack', phonetic: '/ˈbækpæk/', meaning: '背包', past: null, example: 'Pack your backpack.' },
+    { word: 'uniform', phonetic: '/ˈjuːnɪfɔːrm/', meaning: '校服', past: null, example: 'Wear your uniform.' },
+    { word: 'breakfast', phonetic: '/ˈbrekfəst/', meaning: '早餐', past: null, example: 'I eat breakfast.' },
+    { word: 'lunch', phonetic: '/lʌntʃ/', meaning: '午餐', past: null, example: 'Lunch is ready.' },
+    { word: 'dinner', phonetic: '/ˈdɪnər/', meaning: '晚餐', past: null, example: 'We have dinner together.' },
+    { word: 'vegetable', phonetic: '/ˈvedʒtəbəl/', meaning: '蔬菜', past: null, example: 'Eat more vegetables.' },
+    { word: 'tomato', phonetic: '/təˈmɑːtoʊ/', meaning: '西红柿', past: null, example: 'A red tomato.' },
+    { word: 'potato', phonetic: '/pəˈteɪtoʊ/', meaning: '土豆', past: null, example: 'I like potatoes.' },
+    { word: 'carrot', phonetic: '/ˈkærət/', meaning: '胡萝卜', past: null, example: 'A long carrot.' },
+    { word: 'onion', phonetic: '/ˈʌnjən/', meaning: '洋葱', past: null, example: 'Cut the onion.' },
+    { word: 'banana', phonetic: '/bəˈnænə/', meaning: '香蕉', past: null, example: 'Peel a banana.' },
+    { word: 'orange', phonetic: '/ˈɒrɪndʒ/', meaning: '橙子', past: null, example: 'An orange fruit.' },
+    { word: 'strawberry', phonetic: '/ˈstrɔːberi/', meaning: '草莓', past: null, example: 'Sweet strawberries.' },
+    { word: 'sandwich', phonetic: '/ˈsænwɪtʃ/', meaning: '三明治', past: null, example: 'Make a sandwich.' },
+    { word: 'supermarket', phonetic: '/ˈsuːpərmɑːrkɪt/', meaning: '超市', past: null, example: 'Go to the supermarket.' },
+    { word: 'pharmacy', phonetic: '/ˈfɑːrməsi/', meaning: '药店', past: null, example: 'Find a pharmacy.' },
+    { word: 'station', phonetic: '/ˈsteɪʃən/', meaning: '车站', past: null, example: 'Wait at the station.' },
+    { word: 'subway', phonetic: '/ˈsʌbweɪ/', meaning: '地铁', past: null, example: 'Take the subway.' },
+    { word: 'bicycle', phonetic: '/ˈbaɪsɪkəl/', meaning: '自行车', past: null, example: 'Ride a bicycle.' },
+    { word: 'bathroom', phonetic: '/ˈbæθruːm/', meaning: '浴室', past: null, example: 'Where is the bathroom?' },
+    { word: 'afternoon', phonetic: '/ˌæftərˈnuːn/', meaning: '下午', past: null, example: 'Good afternoon.' },
+    { word: 'tomorrow', phonetic: '/təˈmɒrəʊ/', meaning: '明天', past: null, example: 'See you tomorrow.' },
+    { word: 'yesterday', phonetic: '/ˈjestərdeɪ/', meaning: '昨天', past: null, example: 'I went there yesterday.' },
+    { word: 'remember', phonetic: '/rɪˈmembər/', meaning: '记得', past: 'remembered', example: 'Remember this word.' },
+    { word: 'enough', phonetic: '/ɪˈnʌf/', meaning: '足够的', past: null, example: 'That is enough.' },
+    { word: 'almost', phonetic: '/ˈɔːlməʊst/', meaning: '几乎', past: null, example: 'I almost forgot.' },
+    { word: 'quite', phonetic: '/kwaɪt/', meaning: '相当', past: null, example: 'It is quite good.' },
+    { word: 'really', phonetic: '/ˈrɪəli/', meaning: '真的', past: null, example: 'I really like it.' },
+    { word: 'because', phonetic: '/bɪˈkɒz/', meaning: '因为', past: null, example: 'Because I am tired.' },
+    { word: 'before', phonetic: '/bɪˈfɔːr/', meaning: '在…之前', past: null, example: 'Before dinner.' },
+    { word: 'behind', phonetic: '/bɪˈhaɪnd/', meaning: '在…后面', past: null, example: 'Behind the door.' },
+    { word: 'between', phonetic: '/bɪˈtwiːn/', meaning: '在…之间', past: null, example: 'Between you and me.' },
+    { word: 'above', phonetic: '/əˈbʌv/', meaning: '在…上方', past: null, example: 'Above the clouds.' },
+    { word: 'below', phonetic: '/bɪˈloʊ/', meaning: '在…下方', past: null, example: 'Below the table.' },
+    { word: 'often', phonetic: '/ˈɒfən/', meaning: '经常', past: null, example: 'I often read books.' },
+    { word: 'sometimes', phonetic: '/ˈsʌmtaɪmz/', meaning: '有时', past: null, example: 'Sometimes I walk.' },
+    { word: 'favorite', phonetic: '/ˈfeɪvərɪt/', meaning: '最喜欢的', past: null, example: 'My favorite food.' },
+    { word: 'colour', phonetic: '/ˈkʌlər/', meaning: '颜色', past: null, example: 'What colour is it?' },
+    { word: 'purple', phonetic: '/ˈpɜːrpəl/', meaning: '紫色', past: null, example: 'A purple flower.' },
+    { word: 'brown', phonetic: '/braʊn/', meaning: '棕色', past: null, example: 'Brown shoes.' },
+    { word: 'pink', phonetic: '/pɪŋk/', meaning: '粉色', past: null, example: 'A pink dress.' },
+    { word: 'chocolate', phonetic: '/ˈtʃɒklət/', meaning: '巧克力', past: null, example: 'I love chocolate.' },
+    { word: 'cookie', phonetic: '/ˈkʊki/', meaning: '曲奇饼干', past: null, example: 'Eat a cookie.' },
+    { word: 'neighbor', phonetic: '/ˈneɪbər/', meaning: '邻居', past: null, example: 'My neighbor is kind.' },
+    { word: 'medicine', phonetic: '/ˈmedɪsɪn/', meaning: '药', past: null, example: 'Take your medicine.' },
+    { word: 'silence', phonetic: '/ˈsaɪləns/', meaning: '安静', past: null, example: 'Keep silence please.' },
+    { word: 'careful', phonetic: '/ˈkerfəl/', meaning: '小心的', past: null, example: 'Be careful.' },
+    { word: 'polite', phonetic: '/pəˈlaɪt/', meaning: '有礼貌的', past: null, example: 'Be polite.' },
+    { word: 'window', phonetic: '/ˈwɪndoʊ/', meaning: '窗户', past: null, example: 'Open the window.' },
+    { word: 'textbook', phonetic: '/ˈtekstbʊk/', meaning: '课本', past: null, example: 'Open your textbook.' },
+    { word: 'toothbrush', phonetic: '/ˈtuːθbrʌʃ/', meaning: '牙刷', past: null, example: 'Use a toothbrush.' },
+    { word: 'scissors', phonetic: '/ˈsɪzərz/', meaning: '剪刀', past: null, example: 'Pass the scissors.' },
+    { word: 'calendar', phonetic: '/ˈkælɪndər/', meaning: '日历', past: null, example: 'Check the calendar.' },
+  ],
 };
+
+/** 合并去重后的全量词库（200关×2词=400），附带写死的试炼句对 */
+function _buildAllWords() {
+  const seen = new Set();
+  const all = [];
+  for (const pool of [WORD_POOL.easy, WORD_POOL.medium, WORD_POOL.hard, WORD_POOL.expert, WORD_POOL.common]) {
+    for (const item of pool) {
+      const key = item.word.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const trial = WORD_TRIALS[item.word] || WORD_TRIALS[key];
+      if (!trial) {
+        console.warn('[LevelData] missing trial for word:', item.word);
+      }
+      all.push({ ...item, trial });
+    }
+  }
+  return all;
+}
+
+const ALL_WORDS = _buildAllWords();
+
+/** 根据单词计算灵槽上限 */
+export function calcWordMaxSlots(wordStr) {
+  const len = wordStr.length;
+  const slotBonus = len >= 8 ? 3 : 2;
+  return Math.min(15, len + slotBonus);
+}
 
 // 故事模板 — 小滢修仙记（搞笑修仙风）
 const STORY_TEMPLATES = {
@@ -544,27 +645,13 @@ export function getStageData(stage) {
   const realm = getRealmByStage(stage);
   const idx = getStageIndexInRealm(stage);
 
-  // 选择单词
-  const wordCount = stage <= 10 ? 1 : (stage <= 50 ? 1 : 2);
-  let wordPool;
-  if (stage <= 25) {
-    wordPool = WORD_POOL.easy;
-  } else if (stage <= 70) {
-    wordPool = WORD_POOL.medium;
-  } else if (stage <= 140) {
-    wordPool = WORD_POOL.hard;
-  } else {
-    wordPool = WORD_POOL.expert;
-  }
-
-  // 用关卡号作为种子，确保同一关总是相同的单词
-  const seed = stage * 7 + 13;
-  const shuffled = [...wordPool].sort((a, b) => {
-    const hashA = (a.word.charCodeAt(0) * 31 + a.word.charCodeAt(1) * 17 + seed) % 100;
-    const hashB = (b.word.charCodeAt(0) * 31 + b.word.charCodeAt(1) * 17 + seed) % 100;
-    return hashA - hashB;
-  });
-  const words = shuffled.slice(0, wordCount);
+  // 每关固定 2 词，按总表顺序分配（400 词对应 200 关）
+  const wordCount = 2;
+  const baseIdx = (stage - 1) * 2;
+  const words = [
+    ALL_WORDS[baseIdx],
+    ALL_WORDS[baseIdx + 1],
+  ].filter(Boolean);
 
   // 选择故事
   const stories = STORY_TEMPLATES[realm.id] || STORY_TEMPLATES.fanren;
@@ -573,12 +660,8 @@ export function getStageData(stage) {
   // 难度配置
   const extraLetters = Math.min(8, Math.floor(stage / 15) + 2);
 
-  // 计算槽位数：单词总字母数 + 2个错误位
-  const totalWordLetters = words.reduce((sum, w) => sum + w.word.length, 0);
-  // 8字母以下+2个灵槽，8字母及以上+3个灵槽
-  const maxWordLen = Math.max(...words.map(w => w.word.length));
-  const slotBonus = maxWordLen >= 8 ? 3 : 2;
-  const maxSlots = Math.min(15, totalWordLetters + slotBonus);
+  // 单 word 模式下的灵槽上限（取本关较长单词）
+  const maxSlots = words.length ? calcWordMaxSlots(words.reduce((a, b) => (a.word.length >= b.word.length ? a : b)).word) : 8;
 
   return {
     stage,
@@ -590,6 +673,7 @@ export function getStageData(stage) {
       phonetic: w.phonetic,
       past: w.past,
       example: w.example,
+      trial: w.trial,
     })),
     wordCount,
     extraLetters,
@@ -602,67 +686,86 @@ export function getStageData(stage) {
  */
 function getWordMeaning(word) {
   const meanings = {
+    // 5年级词汇
+    'would': '想要', 'glad': '高兴的', 'together': '一起', 'hamburger': '汉堡包',
+    'Coke': '可乐', 'pie': '馅饼', 'drink': '喝', 'juice': '果汁', 'or': '或者',
+    'enjoy': '享用', 'sleepy': '困倦的', 'bored': '烦闷的', 'noodles': '面条',
+    'pizza': '披萨', 'lemonade': '柠檬汁', 'hungry': '饥饿的', 'corner': '拐角',
+    'always': '总是', 'usually': '通常', 'never': '从不', 'practice': '练习',
+    'pool': '游泳池', 'swimmer': '游泳运动员', 'pilot': '飞行员', 'fly': '飞',
+    'plane': '飞机', 'engineer': '工程师', 'design': '设计', 'spaceship': '宇宙飞船',
+    'artist': '艺术家', 'violinist': '小提琴手', 'fantastic': '极好的', 'hobby': '爱好',
+    'job': '工作', 'thought': '思考', 'sad': '难过的', 'weekend': '周末', 'hiking': '远足',
+    'family': '家人', 'all': '全部', 'last': '上一个', 'hear': '听见', 'plan': '计划',
+    'animal': '动物', 'farmer': '农民', 'vet': '兽医', 'feed': '喂养', 'explore': '探险',
+    'beach': '沙滩', 'mountain': '大山', 'grandparent': '祖父母', 'astronaut': '宇航员',
+    'police': '警察', 'Australia': '澳大利亚', 'vacation': '假期', 'trip': '旅行',
+    'camera': '照相机', 'check': '检查', 'during': '在…期间', 'forget': '忘记',
+    'holiday': '假期', 'list': '清单', 'raincoat': '雨衣', 'schoolbag': '书包',
+    'sir': '先生', 'ticket': '车票', 'week': '星期', 'will': '将要', 'worry': '担心',
+    'yours': '你的', 'bank': '银行', 'block': '街区', 'building': '楼房', 'city': '城市',
+    'country': '国家', 'Egypt': '埃及', 'Paris': '巴黎', 'place': '地点', 'pyramid': '金字塔',
+    'restaurant': '餐馆', 'restroom': '卫生间', 'theater': '剧院', 'tower': '塔',
+    'zoo': '动物园', 'left': '左边', 'right': '右边', 'straight': '笔直地', 'turn': '转弯',
+    'welcome': '欢迎', 'cloud': '云', 'cloudy': '多云的', 'dry': '干燥的', 'drop': '雨滴',
+    'feel': '感觉', 'hard': '猛烈地', 'kite': '风筝', 'pouring': '瓢泼大雨', 'rain': '下雨',
+    'rainy': '下雨的', 'snow': '雪', 'snowy': '下雪的', 'sunny': '晴朗的', 'wind': '风',
+    'windy': '刮风的', 'best': '最好的', 'spring': '春天', 'summer': '夏天', 'autumn': '秋天',
+    'winter': '冬天', 'season': '季节', 'warm': '温暖', 'cool': '凉爽', 'cold': '寒冷',
+    'hot': '炎热', 'travel': '旅行', 'umbrella': '雨伞', 'coat': '外套', 'boots': '靴子',
+    'gloves': '手套', 'scarf': '围巾', 'same': '相同的', 'outside': '在户外',
+    // 基础词
     'cat': '猫', 'dog': '狗', 'sun': '太阳', 'run': '跑', 'hat': '帽子',
     'big': '大的', 'red': '红色', 'fun': '乐趣', 'cup': '杯子', 'bus': '公交车',
     'map': '地图', 'pen': '钢笔', 'box': '盒子', 'fox': '狐狸', 'jam': '果酱',
-    'leg': '腿', 'bed': '床', 'pig': '猪', 'hen': '母鸡', 'mix': '混合',
-    'top': '顶部', 'pop': '流行', 'hit': '打击', 'sit': '坐', 'hot': '热的',
-    'not': '不', 'got': '得到', 'lot': '许多', 'pot': '锅', 'dot': '点',
-    'man': '男人', 'can': '能', 'fan': '粉丝', 'pan': '平底锅', 'tan': '晒黑',
-    'van': '货车', 'bag': '包', 'tag': '标签', 'rag': '抹布', 'wag': '摇摆',
+    'leg': '腿', 'bed': '床', 'pig': '猪', 'hen': '母鸡', 'hot': '热的',
+    'not': '不', 'got': '得到', 'man': '男人', 'can': '能', 'fan': '粉丝',
     'dad': '爸爸', 'mom': '妈妈', 'boy': '男孩', 'toy': '玩具', 'joy': '快乐',
-    'day': '天', 'may': '可能', 'say': '说', 'way': '路', 'pay': '支付',
-    'eat': '吃', 'tea': '茶', 'sea': '海', 'bee': '蜜蜂', 'see': '看见',
-    'tree': '树', 'free': '自由', 'three': '三', 'home': '家', 'name': '名字',
-    'game': '游戏', 'came': '来', 'same': '相同', 'play': '玩', 'stay': '停留',
-    'apple': '苹果', 'happy': '快乐', 'water': '水', 'green': '绿色', 'blue': '蓝色',
-    'white': '白色', 'black': '黑色', 'brown': '棕色', 'house': '房子', 'horse': '马',
-    'mouse': '老鼠', 'plane': '飞机', 'train': '火车', 'brain': '大脑', 'chain': '链条',
-    'plain': '平原', 'tiger': '老虎', 'snake': '蛇', 'eagle': '鹰', 'whale': '鲸鱼',
-    'sheep': '绵羊', 'goat': '山羊', 'duck': '鸭子', 'frog': '青蛙',
-    'bread': '面包', 'milk': '牛奶', 'juice': '果汁', 'candy': '糖果', 'cake': '蛋糕',
-    'cookie': '饼干', 'fruit': '水果', 'melon': '甜瓜',
-    'dance': '跳舞', 'speak': '说', 'write': '写', 'read': '读', 'sing': '唱歌',
-    'swim': '游泳', 'jump': '跳', 'small': '小的', 'large': '大的', 'tall': '高的',
-    'short': '矮的', 'long': '长的', 'wide': '宽的', 'thick': '厚的', 'thin': '薄的',
-    'quick': '快的', 'slow': '慢的', 'fast': '快的', 'hard': '硬的', 'soft': '软的',
-    'warm': '温暖', 'cool': '凉爽', 'phone': '电话', 'table': '桌子', 'chair': '椅子',
-    'clock': '钟', 'light': '灯', 'sound': '声音', 'music': '音乐', 'color': '颜色',
-    'spring': '春天', 'summer': '夏天', 'autumn': '秋天', 'winter': '冬天',
-    'sunny': '晴天', 'cloudy': '多云', 'rainy': '下雨', 'windy': '有风',
-    'animal': '动物', 'person': '人', 'family': '家庭', 'friend': '朋友',
-    'teacher': '老师', 'student': '学生', 'school': '学校',
-    'garden': '花园', 'forest': '森林', 'river': '河流', 'mountain': '山',
-    'island': '岛屿', 'ocean': '海洋', 'beach': '海滩',
-    'doctor': '医生', 'nurse': '护士', 'police': '警察', 'driver': '司机',
-    'worker': '工人', 'farmer': '农民', 'cook': '厨师',
-    'pencil': '铅笔', 'rubber': '橡皮', 'ruler': '尺子', 'eraser': '橡皮',
-    'folder': '文件夹', 'bottle': '瓶子', 'basket': '篮子',
-    'chicken': '鸡', 'rabbit': '兔子', 'monkey': '猴子', 'elephant': '大象',
-    'giraffe': '长颈鹿', 'penguin': '企鹅', 'dolphin': '海豚',
-    'butterfly': '蝴蝶', 'crocodile': '鳄鱼', 'kangaroo': '袋鼠',
-    'squirrel': '松鼠', 'dinosaur': '恐龙',
-    'breakfast': '早餐', 'lunch': '午餐', 'dinner': '晚餐', 'supper': '晚餐',
-    'kitchen': '厨房', 'bedroom': '卧室', 'bathroom': '浴室',
-    'snowy': '下雪', 'foggy': '有雾', 'stormy': '暴风雨',
-    'beautiful': '美丽的', 'wonderful': '精彩的', 'different': '不同的',
-    'important': '重要的', 'interesting': '有趣的',
-    'exercise': '锻炼', 'healthy': '健康的', 'balance': '平衡',
-    'vitamin': '维生素', 'protein': '蛋白质', 'energy': '能量',
-    'experiment': '实验', 'laboratory': '实验室', 'molecule': '分子',
-    'oxygen': '氧气', 'gravity': '重力',
-    'adventure': '冒险', 'celebrate': '庆祝', 'difficult': '困难的',
-    'education': '教育', 'favorite': '最喜欢的', 'government': '政府',
-    'happiness': '幸福', 'knowledge': '知识', 'landscape': '风景',
-    'mystery': '神秘', 'necessary': '必要的', 'opposite': '相反的',
-    'politics': '政治', 'recognize': '认出', 'technology': '技术',
-    'university': '大学', 'atmosphere': '气氛', 'boundary': '边界',
-    'carnival': '嘉年华', 'detective': '侦探', 'everyday': '每天',
-    'furniture': '家具', 'guardian': '守护者', 'heritage': '遗产',
-    'illustrate': '说明', 'journalist': '记者', 'messenger': '信使',
-    'notebook': '笔记本', 'paragraph': '段落', 'question': '问题',
-    'relationship': '关系', 'situation': '情况', 'tradition': '传统',
-    'understand': '理解', 'valuable': '有价值的', 'warehouse': '仓库',
+    'day': '天', 'may': '可能', 'say': '说', 'eat': '吃', 'tea': '茶',
+    'sea': '海', 'bee': '蜜蜂', 'see': '看见', 'tree': '树', 'home': '家',
+    'name': '名字', 'game': '游戏', 'play': '玩', 'book': '书', 'fish': '鱼',
+    'bird': '鸟', 'cake': '蛋糕', 'milk': '牛奶', 'like': '喜欢', 'love': '爱',
+    'want': '想要', 'help': '帮助', 'make': '制作', 'take': '拿', 'come': '来',
+    // 中级词
+    'apple': '苹果', 'happy': '快乐', 'water': '水', 'green': '绿色', 'house': '房子',
+    'horse': '马', 'train': '火车', 'tiger': '老虎', 'snake': '蛇', 'sheep': '绵羊',
+    'bread': '面包', 'candy': '糖果', 'dance': '跳舞', 'speak': '说', 'write': '写',
+    'small': '小的', 'large': '大的', 'tall': '高的', 'short': '矮的', 'quick': '快的',
+    'slow': '慢的', 'fast': '快的', 'phone': '电话', 'table': '桌子', 'chair': '椅子',
+    'clock': '钟', 'light': '灯', 'music': '音乐', 'friend': '朋友', 'school': '学校',
+    'flower': '花', 'river': '河', 'about': '关于', 'after': '之后', 'again': '再',
+    'begin': '开始', 'bring': '带来', 'carry': '携带', 'clean': '干净的', 'climb': '爬',
+    'close': '关闭', 'draw': '画', 'early': '早的', 'earth': '地球', 'every': '每个',
+    'fruit': '水果', 'grow': '生长', 'guess': '猜', 'heart': '心', 'heavy': '重的',
+    'learn': '学习', 'leave': '离开', 'money': '钱', 'month': '月', 'night': '夜晚',
+    'paper': '纸', 'plant': '植物', 'quiet': '安静的', 'share': '分享', 'sleep': '睡觉',
+    'smile': '微笑', 'space': '空间', 'spend': '花费', 'start': '开始', 'story': '故事',
+    'study': '学习', 'think': '想', 'tired': '累的', 'today': '今天', 'visit': '拜访',
+    'watch': '观看', 'white': '白色', 'world': '世界', 'young': '年轻的', 'dream': '梦',
+    'grape': '葡萄', 'lemon': '柠檬', 'mango': '芒果', 'peach': '桃子',
+    // 高级词
+    'teacher': '老师', 'student': '学生', 'garden': '花园', 'forest': '森林', 'doctor': '医生',
+    'pencil': '铅笔', 'chicken': '鸡', 'rabbit': '兔子', 'monkey': '猴子', 'elephant': '大象',
+    'giraffe': '长颈鹿', 'penguin': '企鹅', 'dolphin': '海豚', 'butterfly': '蝴蝶',
+    'kitchen': '厨房', 'bedroom': '卧室', 'morning': '早晨', 'evening': '傍晚',
+    'exercise': '锻炼', 'healthy': '健康的', 'balance': '平衡', 'energy': '能量',
+    'wonderful': '精彩的', 'beautiful': '美丽的', 'different': '不同的', 'important': '重要的',
+    'interesting': '有趣的', 'ocean': '海洋', 'airport': '机场', 'already': '已经',
+    'bottle': '瓶子', 'bridge': '桥', 'castle': '城堡', 'clever': '聪明的', 'collect': '收集',
+    'company': '公司', 'cousin': '表亲', 'crystal': '水晶', 'culture': '文化', 'danger': '危险',
+    'desert': '沙漠', 'develop': '发展', 'diamond': '钻石', 'dinosaur': '恐龙', 'discover': '发现',
+    'dragon': '龙', 'escape': '逃跑', 'example': '例子', 'famous': '著名的', 'feather': '羽毛',
+    'finger': '手指', 'flight': '航班', 'follow': '跟随', 'freeze': '冻结', 'future': '未来',
+    'gentle': '温柔的', 'golden': '金色的', 'guitar': '吉他', 'honest': '诚实的', 'jungle': '丛林',
+    'kingdom': '王国', 'ladder': '梯子', 'launch': '发射', 'market': '市场', 'master': '大师',
+    'mirror': '镜子', 'modern': '现代的', 'planet': '行星', 'silver': '银色', 'spirit': '精神',
+    'temple': '寺庙', 'village': '村庄',
+    // 精英词
+    'adventure': '冒险', 'celebrate': '庆祝', 'difficult': '困难的', 'education': '教育',
+    'favorite': '最喜欢的', 'happiness': '幸福', 'knowledge': '知识', 'mystery': '神秘',
+    'necessary': '必要的', 'opposite': '相反的', 'recognize': '认出', 'technology': '技术',
+    'atmosphere': '气氛', 'furniture': '家具', 'guardian': '守护者', 'heritage': '遗产',
+    'notebook': '笔记本', 'question': '问题', 'tradition': '传统', 'valuable': '有价值的',
   };
   return meanings[word] || word;
 }

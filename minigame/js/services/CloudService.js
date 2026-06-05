@@ -1,8 +1,8 @@
 /**
  * Cloud Service - 微信云开发服务模块
- * 环境ID: cloud1-d7giehwchbc1527f3
+ * 环境ID: cloud1-d0gvx0j804a5c17c1
  */
-const CLOUD_ENV = 'cloud1-d7giehwchbc1527f3';
+const CLOUD_ENV = 'cloud1-d0gvx0j804a5c17c1';
 
 let db = null;
 let initialized = false;

@@ -23,6 +23,7 @@ export class SceneManager {
       next.onEnter(params);
       return;
     }
+    this.currentScene?.onLeave?.();
     this.nextScene = next;
     this.nextParams = params;
     this.fadeDir = 1; // 开始淡出

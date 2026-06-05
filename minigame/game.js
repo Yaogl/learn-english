@@ -8,13 +8,16 @@ import { BattleScene } from './js/scenes/BattleScene';
 import { ParentScene } from './js/scenes/ParentScene';
 import { CloudService } from './js/services/CloudService';
 import { getShareConfig, parseLaunchQuery } from './js/services/ShareBridge.js';
-import { initAudio } from './js/services/AudioService';
+import { initAudio, playGameBgm } from './js/services/AudioService';
 
 // 初始化云开发
 CloudService.init();
 
 // 初始化音频
 initAudio();
+
+// 进入小程序即开始播放背景音乐，全程循环
+playGameBgm();
 
 // 分享菜单与转发卡片
 if (typeof wx.showShareMenu === 'function') {
