@@ -1743,6 +1743,11 @@ export class GameScene extends BaseScene {
 
   /** 检查答案 */
   _checkTrial() {
+    // 防止重复提交（已经在处理中或已正确）
+    if (this.trialResult === 'correct' || this.trialResult === 'processing') {
+      return;
+    }
+
     const sentence = this.trialCurrent === 0
       ? this.trialSentences.declarative
       : this.trialSentences.interrogative;
@@ -1763,7 +1768,7 @@ export class GameScene extends BaseScene {
     }
 
     if (isCorrect) {
-      this.trialResult = 'correct';
+      this.trialResult = 'processing'; // 标记为处理中，防止重复点击
       playMatch();
       pronounceWord(sentence.sentence.replace(/[.,!?]/g, ''));
       setTimeout(() => {
